@@ -1,6 +1,6 @@
 # CareAway
 
-A web app prototype that helps young adults on a parent's out-of-state insurance plan find the right level of care, know the cost first, and see where to go nearby.
+A web app prototype that helps you find the right level of care when you're away from home, know the cost first, and see where to go nearby. It works with out-of-state insurance, including a parent's plan.
 
 ## Try it out here!
 
