@@ -12,7 +12,7 @@ A web app prototype that helps young adults on a parent's out-of-state insurance
 - **Emergency signs come first.** Red-flag signs are checked before anything else and send you straight to 911 or 988.
 - **Add a photo.** Take or choose a photo of a rash, burn, cut or swelling to show a clinician later. Photos stay on your device and are not analyzed.
 - **Coverage by plan type.** Pick your plan type, or type your plan's name, to see what it usually covers away from home. No member ID or insurance login.
-- **Find care.** Compare nearby options by fit, estimated cost, typical wait and travel time by car, walking or transit, on a map you can drag and zoom.
+- **Find care.** Compare nearby options by fit, estimated cost, typical wait and travel time by car, walking or transit, on a real street map you can drag and zoom. The pins are sample places.
 - **Help with cost.** Free clinics, sliding-scale health centers and hospital financial assistance are shown alongside everything else.
 
 ## Cities
@@ -22,6 +22,7 @@ Chicago, San Francisco Bay Area, New York City, Los Angeles, Washington DC, Seat
 ## Tools used
 
 - HTML, CSS and JavaScript in a single file (`index.html`)
+- Leaflet with OpenStreetMap for the map
 - Rules-based triage (no AI in this version)
 - GitHub Pages for hosting
 
