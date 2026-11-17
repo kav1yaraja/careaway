@@ -97,6 +97,13 @@ footer .cols a,footer .cols span{display:block;color:var(--ink);text-decoration:
 .write label{font-weight:700;display:block}
 textarea,select,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 textarea{min-height:110px;resize:vertical;margin-top:12px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.vh:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+.write .btn{display:inline-block;font-weight:600;margin-top:12px;padding:9px 18px;font-size:15px;cursor:pointer}
+.thumbs{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 4px}
+.thumbs figure{margin:0;display:grid;gap:6px;justify-items:start}
+.thumbs img{width:132px;height:132px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}
+.thumbs .chip{padding:3px 12px;font-size:13px}
 .hint{color:var(--muted);font-size:14px;margin-top:8px}
 .q{margin-top:28px} .q>b{display:block;margin-bottom:10px;font-weight:700}
 .planw{margin-top:12px;display:grid;gap:6px;width:100%}
@@ -370,7 +377,7 @@ function rank(level, plan, modes, city){
 }
 
 // ---------- State ----------
-const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, result:null};
+const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], result:null};
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app = document.getElementById('app');
 
@@ -440,7 +447,12 @@ function triageView(){
       <div class="card write"><label for="symptoms">Describe your symptoms in your own words</label>
         <p class="hint" style="margin-top:2px">Optional. Write a sentence or two and we'll pick the closest match above for you and check it for emergency signs.</p>
         <textarea id="symptoms" maxlength="600" placeholder="e.g. Burned two fingers on a pot handle last night. Red and sore, no blisters yet.">${esc(S.text)}</textarea>
-        <p class="hint" id="matchNote">${matchNote()}</p></div>${navrow(true)}`;
+        <p class="hint" id="matchNote">${matchNote()}</p></div>
+      <div class="card write"><b style="font-weight:700;display:block">Add a photo</b>
+        <p class="hint" style="margin-top:2px">Optional. Take or choose a photo of what's going on, like a rash, burn, cut or swelling, to show a clinician later. Up to ${MAXPHOTOS} photos.</p>
+        ${thumbs(true)}
+        ${S.photos.length < MAXPHOTOS ? `<input type="file" id="photo" class="vh" accept="image/*" multiple data-act="photo"><label class="btn" for="photo">${S.photos.length ? 'Add another photo' : 'Take or choose a photo'}</label>` : ''}
+        <p class="hint">Your photo stays on this device and is never uploaded. CareAway can't read photos yet, so it won't change your result. Answer the questions as usual.</p></div>${navrow(true)}`;
   } else if (S.step === 2){
     const t = TOPICS[S.topic];
     h += `<span class="eyebrow">Safety questions</span><h1>Anything like this with your ${t.label.toLowerCase()}?</h1>
@@ -471,6 +483,11 @@ const TODO = [
   ['Go to an urgent care or retail clinic today.','Bring your plan card and a photo ID.','Call ahead to check they treat this.'],
   ['Go to the nearest emergency room now. Have someone else drive if you can.','Don\'t wait to sort out insurance first. Most plans must cover emergency care anywhere.','If things get worse on the way, call 911.']
 ];
+const MAXPHOTOS = 3;
+function thumbs(edit){
+  return S.photos.length ? `<div class="thumbs">${S.photos.map((u, i) => `<figure><img src="${u}" alt="Your photo ${i + 1}">${edit ? `<button class="chip" data-act="rmphoto" data-k="${i}" aria-label="Remove photo ${i + 1}">Remove</button>` : ''}</figure>`).join('')}</div>` : '';
+}
+function clearPhotos(){ S.photos.forEach(u => { try { URL.revokeObjectURL(u); } catch (err) {} }); S.photos = []; }
 function resultView(){
   const r = S.result, L = r.level, t = TOPICS[r.topic];
   let h = `<div class="in narrow page" style="padding-block:44px 64px"><span class="eyebrow">Based on what you described</span>
@@ -481,6 +498,9 @@ function resultView(){
   if (L < 4) h += `<div class="card box"><h2 style="font-size:22px">Go up a level if…</h2><p class="small">Trust your gut. If any of these appear, stop waiting and get seen.</p>
     <ul class="list up">${t.qs.filter(q => q[1] > L).slice(0, 3).map(q => `<li>${q[0]}</li>`).concat('<li>It is getting worse quickly, or any emergency sign from the first step appears</li>').join('')}</ul></div>`;
   if (r.call !== '911') h += `<div class="card box cta2"><div><h2 style="font-size:22px">Find ${LEVELS[L].toLowerCase()} near you</h2><p class="small">Costs shown for: ${planLabel()}. Ranked by level of care, coverage, cost and travel.</p></div><a class="btn pri" href="#find-care">See options →</a></div>`;
+  if (S.photos.length && r.call !== '911') h += `<div class="card box"><h2 style="font-size:22px">Your photo${S.photos.length > 1 ? 's' : ''}</h2>
+    <p class="small" style="margin-top:6px">Show ${S.photos.length > 1 ? 'these' : 'this'} to the clinician or on a telehealth visit. Rashes, burns and swelling change, so a photo of how it looked earlier helps. CareAway did not use ${S.photos.length > 1 ? 'them' : 'it'} to decide your level of care.</p>
+    ${thumbs(false)}<p class="small">Only on this device. ${S.photos.length > 1 ? 'They disappear' : 'It disappears'} when you close or refresh this page, so keep your own copy.</p></div>`;
   h += `<div style="margin-top:36px;padding-top:24px;border-top:1px solid var(--line)"><span class="eyebrow">Source for this guidance</span>
     <p style="margin-top:8px"><a href="${MED + (L === 4 ? 'emergencymedicalservices.html' : t.src)}" target="_blank" rel="noopener">MedlinePlus · ${L === 4 ? 'Emergency medical services' : t.srcName}</a></p>
     <p class="small" style="margin-top:12px">General guidance only, not a diagnosis. If you're unsure, or you feel worse, get seen. Emergency: call 911. Mental health crisis: call or text 988.</p>
@@ -595,7 +615,7 @@ function howView(){
       <div><span>Hospitals, ERs and median ER times</span><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS Provider Data Catalog</a></div>
       <div><span>Symptom guidance</span><a href="https://medlineplus.gov/" target="_blank" rel="noopener">MedlinePlus</a></div>
       <div><span>Patient billing rights</span><a href="https://www.cms.gov/nosurprises" target="_blank" rel="noopener">CMS · No Surprises Act</a></div></div>
-    <div class="card box" style="background:var(--soft)"><h2 style="font-size:26px;margin:0">Privacy, in plain terms</h2><ul class="list" style="color:var(--muted)"><li>No account, no sign-in, no profile.</li><li>Your answers stay on this page and are never sent anywhere. Closing it clears them.</li><li>No photos are uploaded, and nothing is shared with an insurer.</li><li>Photo-based triage is deliberately not built yet. It needs a clinical review first.</li></ul></div>
+    <div class="card box" style="background:var(--soft)"><h2 style="font-size:26px;margin:0">Privacy, in plain terms</h2><ul class="list" style="color:var(--muted)"><li>No account, no sign-in, no profile.</li><li>Your answers stay on this page and are never sent anywhere. Closing it clears them.</li><li>Photos you add stay on your device. They are never uploaded, and nothing is shared with an insurer.</li><li>CareAway does not analyze photos. Photo-based triage is deliberately not built yet. It needs a clinical review first.</li></ul></div>
     <div class="card box cant"><h2 style="font-size:26px;margin:0">What CareAway can't do</h2><p>It can't tell you what's wrong with you, and it can't guarantee a cost. It can be wrong, which is why the ER is always visible and why every answer says to step up if something changes. In an emergency, call 911. Mental health crisis: call or text 988.</p></div>
     <div style="margin-top:28px"><a class="btn pri" href="#triage">Start triage</a></div></div>`;
 }
@@ -657,7 +677,8 @@ document.addEventListener('click', e => {
   else if (a === 'zoom'){ S.zoom = Math.max(0.6, Math.min(2.6, +(S.zoom + v * 0.4).toFixed(1))); render(); }
   else if (a === 'recenter'){ S.center = null; S.zoom = 1; render(); }
   else if (a === 'plan-go'){ S.plan = k; if (location.hash === '#find-care') render(true); else location.hash = '#find-care'; }
-  else if (a === 'restart'){ Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
+  else if (a === 'rmphoto'){ const u = S.photos.splice(+k, 1)[0]; try { URL.revokeObjectURL(u); } catch (err) {} render(); }
+  else if (a === 'restart'){ clearPhotos(); Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
 });
 document.addEventListener('keydown', e => {
   const el = e.target.closest && e.target.closest('.pin');
@@ -671,6 +692,10 @@ document.addEventListener('change', e => {
   else if (a === 'q') S.qs = tog(S.qs, +el.dataset.i);
   else if (a === 'plan'){ S.plan = el.value; render(); }
   else if (a === 'covered'){ S.covered = el.checked; render(); }
+  else if (a === 'photo'){
+    Array.from(el.files || []).filter(f => f.type.indexOf('image/') === 0).slice(0, MAXPHOTOS - S.photos.length).forEach(f => S.photos.push(URL.createObjectURL(f)));
+    render();
+  }
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'planText'){
