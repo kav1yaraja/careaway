@@ -74,7 +74,7 @@ section.blk h2{font-size:clamp(30px,3.4vw + 8px,48px)}
 
 /* home: hero */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:clamp(32px,5vw,72px);align-items:center;min-height:min(calc(100svh - 69px),820px);padding-block:48px}
-.hero h1{font-size:clamp(38px,5.2vw + 6px,72px);letter-spacing:-.03em;line-height:1.04;max-width:11ch}
+.hero h1{font-size:clamp(38px,5.2vw + 6px,72px);letter-spacing:-.03em;line-height:1.04;max-width:12ch}
 .hero .lead{margin-top:24px}
 .hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
 .hero .fact{margin-top:24px;font-size:14px;color:var(--muted);max-width:52ch}
@@ -508,7 +508,7 @@ function home(){
   return `<div class="in">
   <section class="hero">
     <div>
-      <h1><span>Care finder for a parent's health plan</span></h1>
+      <h1><span>Find the right care away from home</span></h1>
       <p class="lead" data-in style="--d:0">Sick or hurt in a city that isn't home. Answer a few questions and see the level of care you need, what it usually costs on your plan type, and where to go.</p>
       <div class="cta"><a class="btn pri" href="#triage" data-in style="--d:1">Start triage</a><a class="btn" href="#find-care" data-in style="--d:2">Find care near me</a></div>
       <p class="fact" data-in style="--d:3">Works in ${Object.keys(CITIES).length} cities. Triage only, never a diagnosis, and nothing you type is saved.</p>
