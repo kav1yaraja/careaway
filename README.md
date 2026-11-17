@@ -10,6 +10,7 @@ A web app prototype that helps young adults on a parent's out-of-state insurance
 
 - **Triage, never diagnosis.** Answer a few questions, or describe your symptoms in your own words, and CareAway points you to a level of care: self-care, telehealth, primary care, urgent care or the emergency room.
 - **Emergency signs come first.** Red-flag signs are checked before anything else and send you straight to 911 or 988.
+- **Add a photo.** Take or choose a photo of a rash, burn, cut or swelling to show a clinician later. Photos stay on your device and are not analyzed.
 - **Coverage by plan type.** Pick your plan type, or type your plan's name, to see what it usually covers away from home. No member ID or insurance login.
 - **Find care.** Compare nearby options by fit, estimated cost, typical wait and travel time by car, walking or transit, on a map you can drag and zoom.
 - **Help with cost.** Free clinics, sliding-scale health centers and hospital financial assistance are shown alongside everything else.
