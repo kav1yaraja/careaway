@@ -4,191 +4,297 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CareAway</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&family=Quicksand:wght@500;600&display=swap">
 <style>
-/* Layout: multi-view app (home, triage wizard, find care, how it works) under one sticky header; airy single column, wide two-column on home and find care. */
+/* Redesign working copy. System: one warm near-black ink, white and paper grounds, one forest-green accent
+   (primary button, links, focus, the coverage band), radius 8/12/20, weights 400 and 500 only.
+   Motion: the hero enters once on load; buttons step and press; clickable cards lift 2px; links draw an underline. */
 :root{
   color-scheme:light;
-  --bg:#ffffff; --surface:#ffffff; --ink:#1c2738; --muted:#5d6b80; --line:#e3e8ef; --soft:#f6f8fb;
-  --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:#e9f0fe;
-  --ok:#15803d; --ok-soft:#e3f5ea; --warn:#b45309; --warn-soft:#fff8e1; --warn-line:#f2d98a;
-  --bad:#c81e1e; --bad-soft:#fdf0f0; --bad-line:#f3c2c2; --water:#d6e6fb; --street:#e8eef6;
-  --display:"Quicksand","Nunito",system-ui,sans-serif; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#ffffff; --surface:#ffffff; --soft:#f4f2ec; --ink:#1b1d1a; --muted:#5a5e57;
+  --line:rgba(27,29,26,.14); --line-2:rgba(27,29,26,.3);
+  --accent:#14614b; --accent-ink:#ffffff; --accent-soft:#e6efe9;
+  --ok:#1c6b3f; --ok-soft:#e5f1e7; --warn:#8a5200; --warn-soft:#fbf1da; --warn-line:#ead29a;
+  --bad:#b3261e; --bad-soft:#fbecea; --bad-line:#efc1bc; --water:#d9e6e8; --street:#ffffff;
+  --display:"Quicksand","Nunito",sans-serif; --body:"Nunito",sans-serif;
+  --r-sm:8px; --r-md:12px; --r-lg:20px;
+  --ease:cubic-bezier(.2,.8,.2,1); --ease-enter:cubic-bezier(.22,1,.36,1); --ease-io:cubic-bezier(.65,0,.35,1);
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-h1,h2,h3,h4{font-family:var(--display);font-weight:500;margin:0;line-height:1.15;text-wrap:balance;letter-spacing:-.01em}
-p{margin:0} a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;margin:0;line-height:1.1;text-wrap:balance;letter-spacing:-.02em}
+h3,h4{letter-spacing:-.01em;line-height:1.2}
+p{margin:0} b,strong{font-weight:500} em{font-style:normal;font-weight:500}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.narrow{max-width:820px}
+.in{max-width:1200px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.narrow{max-width:800px}
+
+/* links: a faint hairline at rest, an ink line draws left to right on hover */
+main a:not(.btn),footer a{color:var(--accent);text-decoration:none;
+  background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) 0 100%/100% 1px no-repeat;
+  transition:background-size .15s var(--ease)}
+footer a{color:var(--ink);background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat}
+
+/* header */
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);border-bottom:1px solid var(--line)}
-header.top .in{display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap;padding-block:12px}
-.logo{font:500 26px var(--display);color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
-.logo i{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
-.logo i::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
-nav{display:flex;gap:4px 22px;flex-wrap:wrap;margin:0 auto}
-nav a{color:var(--muted);text-decoration:none;padding:4px 2px}
-nav a.on{color:var(--ink);font-weight:700}
-.sos{border:1px solid var(--bad-line);background:var(--bad-soft);color:var(--bad);border-radius:999px;padding:7px 16px;font-weight:600;font-size:14px;white-space:nowrap}
-.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.lead{color:var(--muted);font-size:18px;max-width:60ch}
-.btn{display:inline-flex;align-items:center;gap:10px;font:600 16px var(--body);border-radius:999px;padding:13px 26px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none}
+header.top .in{display:flex;align-items:center;gap:8px 28px;flex-wrap:wrap;min-height:68px;padding-block:10px}
+.logo{font:600 23px/1 var(--display);letter-spacing:-.02em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo svg{width:24px;height:24px;display:block}
+nav{display:flex;gap:4px 28px;flex-wrap:wrap;margin-right:auto}
+nav a{color:var(--muted);text-decoration:none;padding:6px 0;position:relative;transition:color .15s var(--ease)}
+nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .15s var(--ease)}
+nav a.on{color:var(--ink);font-weight:500}
+nav a.on::after{height:2px;transform:none}
+.sos{border:1px solid var(--bad-line);color:var(--bad);border-radius:var(--r-sm);padding:6px 12px;font-weight:500;font-size:14px;white-space:nowrap}
+
+/* shared parts */
+.eyebrow{font-size:13px;font-weight:500;color:var(--muted)}
+.lead{color:var(--ink);font-size:clamp(18px,1.2vw + 12px,20px);line-height:1.55;max-width:56ch}
+.small{font-size:14px;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:9px 24px;font:500 16px/1.2 var(--body);
+  border-radius:var(--r-sm);border:1px solid var(--line-2);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none;
+  transition:transform .15s var(--ease),background-color .15s var(--ease),border-color .15s var(--ease)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.ghost{border-color:transparent;padding-inline:0;color:var(--muted)}
 .btn.red{color:var(--bad);border-color:var(--bad-line)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
-section.blk{padding-block:56px}
-/* home */
-.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:48px}
-.hero h1{font-size:clamp(40px,6.4vw,74px);font-weight:600;letter-spacing:-.02em}
-.hero h1 span{color:var(--accent)}
-.hero .tag{display:inline-block;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 16px;margin-bottom:22px}
-.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
-.ex .hd{padding:20px 22px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.ex h3{font-size:24px;margin-top:4px}
-.ex .row{display:flex;justify-content:space-between;gap:12px;padding:14px 22px;border-top:1px solid var(--line)}
+.btn:active{transform:translateY(1px) scale(.985);transition-duration:.09s}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
+.pill{display:inline-block;font-size:13px;font-weight:500;line-height:1.4;padding:3px 10px;border-radius:6px;background:var(--soft);color:var(--muted)}
+.pill.b{background:var(--ink);color:#fff}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.w{background:var(--warn-soft);color:var(--warn)}
+.pill.x{background:var(--bad-soft);color:var(--bad)}
+.chip{font:400 15px/1.2 var(--body);color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);padding:8px 14px;cursor:pointer;
+  transition:background-color .15s var(--ease),border-color .15s var(--ease),transform .09s var(--ease)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:500}
+.chip:active{transform:scale(.985)} .chip:disabled{opacity:.4;cursor:default}
+section.blk{padding-block:clamp(64px,9vw,120px)}
+section.blk h2{font-size:clamp(30px,3.4vw + 8px,48px)}
+
+/* home: hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:clamp(32px,5vw,72px);align-items:center;min-height:min(calc(100svh - 69px),820px);padding-block:48px}
+.hero h1{font-size:clamp(38px,5.2vw + 6px,72px);letter-spacing:-.03em;line-height:1.04;max-width:11ch}
+.hero .lead{margin-top:24px}
+.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero .fact{margin-top:24px;font-size:14px;color:var(--muted);max-width:52ch}
+.ex{overflow:hidden;background:var(--soft);border:0;padding:clamp(16px,2.4vw,28px)}
+.ex .win{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md)}
+.ex .hd{padding:20px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.ex h3{font-size:22px;margin:2px 0}
+.ex .row{display:flex;justify-content:space-between;gap:12px;padding:13px 20px;border-top:1px solid var(--line)}
+.ex .row b{font-weight:500}
 .ex .row small{display:block;color:var(--muted);font-size:14px}
-.ex .row .r{text-align:right;white-space:nowrap}
-.ex .ft{padding:14px 22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
-.pill{display:inline-block;font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--soft);color:var(--muted);border:1px solid var(--line)}
-.pill.b{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
-.pill.w{background:var(--warn-soft);color:var(--warn);border-color:transparent}
-.pill.x{background:var(--bad-soft);color:var(--bad);border-color:transparent}
-.steps3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:28px;overflow:hidden}
-.steps3 div{padding:30px;border-left:1px solid var(--line)}
-.steps3 div:first-child{border-left:0}
-.steps3 b{font:500 22px var(--display);color:var(--accent)}
-.steps3 h3{font-size:21px;margin:14px 0 8px}
-.steps3 p,.trust p{color:var(--muted)}
-.two{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:40px;align-items:start}
-.trust>div{padding:24px 28px;border-top:1px solid var(--line)}
-.trust>div:first-child{border-top:0}
-.trust h3{font-size:20px;margin-bottom:4px}
+.ex .row .r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ex .row.no{color:var(--muted)}
+.ex .ft{padding:12px 20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+
+/* home: the five levels */
+.levels{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:clamp(32px,5vw,72px);align-items:center}
+.levels p.lead{margin-top:20px}
+.levels .tries{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.levels .tries span{flex-basis:100%}
+.ladder{--rh:76px;position:relative;border-top:1px solid var(--line)}
+.ladder .ind{position:absolute;inset:0 0 auto;height:var(--rh);background:var(--ink);border-radius:var(--r-md);transform:translateY(calc(var(--i) * var(--rh)));transition:transform .24s var(--ease-io)}
+.rung{position:relative;height:var(--rh);padding-inline:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);transition:color .2s var(--ease)}
+.rung b{display:block;font:600 20px/1.2 var(--display);letter-spacing:-.01em}
+.rung small{display:block;font-size:14px;color:var(--muted);transition:color .2s var(--ease)}
+.rung .c{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.rung .bar{position:absolute;left:16px;max-width:calc(100% - 32px);bottom:-1px;height:2px;background:var(--ink)}
+.rung.on{color:#fff;border-color:transparent} .rung.on small{color:rgba(255,255,255,.72)} .rung.on .bar{opacity:0}
+
+/* home: rules, coverage band */
+.two{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:clamp(32px,5vw,72px);align-items:start}
+.alt{background:var(--soft)}
+.trust{background:none;border:0;border-radius:0;border-top:1px solid var(--line-2)}
+.trust>div{padding:24px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px 24px}
+.trust h3{font-size:20px}
+.trust p{color:var(--muted)}
 .band{background:var(--accent);color:var(--accent-ink)}
-.band .eyebrow,.band .lead{color:var(--accent-ink);opacity:.85}
-.band h2{font-size:clamp(28px,4vw,44px)}
-.band .chips{display:flex;flex-wrap:wrap;gap:10px}
-.band .chips button{font:inherit;color:inherit;background:transparent;cursor:pointer;border:1px solid currentColor;border-radius:999px;padding:9px 18px;transition:background .15s,color .15s}
-.band .chips button:hover,.band .chips button:focus-visible{background:var(--accent-ink);color:var(--accent)}
-.band .btn{background:var(--accent-ink);color:var(--accent);border-color:transparent;margin-top:24px}
-footer{background:var(--soft);border-top:1px solid var(--line);padding-block:40px;color:var(--muted);font-size:14px}
-footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px;padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:20px}
-footer h4{font-size:24px;color:var(--ink);margin-bottom:8px}
-footer .cols a,footer .cols span{display:block;color:var(--ink);text-decoration:none;font-size:16px;margin-top:6px}
+.band .lead{color:inherit;margin-top:20px}
+.band .chips{display:flex;flex-wrap:wrap;gap:8px}
+.band .chips button{font:400 16px/1.2 var(--body);color:inherit;background:transparent;cursor:pointer;border:1px solid rgba(255,255,255,.45);border-radius:var(--r-sm);padding:11px 16px;
+  transition:background-color .15s var(--ease),color .15s var(--ease),transform .15s var(--ease)}
+.band .chips button:active{transform:translateY(1px) scale(.985)}
+.band .btn{background:var(--accent-ink);color:var(--accent);border-color:transparent;margin-top:32px}
+.band :focus-visible{outline-color:#fff}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding-block:56px 40px;color:var(--muted);font-size:14px}
+footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;padding-bottom:32px;border-bottom:1px solid var(--line);margin-bottom:24px}
+footer h4{font-size:22px;color:var(--ink);margin-bottom:10px}
+footer .cols a,footer .cols span{display:table;color:var(--ink);font-size:16px;margin-top:8px}
+footer .cols .eyebrow{color:var(--muted);font-size:13px;margin:0 0 4px}
+
 /* wizard */
-.prog{display:flex;align-items:center;gap:8px;margin-bottom:36px}
-.prog i{flex:1;height:4px;border-radius:4px;background:var(--line)}
-.prog i.on{background:var(--accent)}
-.prog span{margin-left:8px}
-.wiz h1,.page h1{font-size:clamp(30px,4.6vw,48px);margin:10px 0 12px}
+.prog{display:flex;align-items:center;gap:6px;margin-bottom:40px}
+.prog i{flex:1;height:2px;background:var(--line)}
+.prog i.on{background:var(--ink)}
+.prog span{margin-left:10px;white-space:nowrap}
+.wiz h1,.page h1{font-size:clamp(30px,3.4vw + 8px,48px);margin:8px 0 14px}
+.wiz .lead,.page .lead{color:var(--muted);font-size:18px}
 .checks{margin-top:28px;overflow:hidden}
-.checks label{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;border-top:1px solid var(--line);cursor:pointer}
+.checks label{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;border-top:1px solid var(--line);cursor:pointer;transition:background-color .15s var(--ease)}
 .checks label:first-child{border-top:0}
-.checks input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--accent)}
+.checks label:has(input:checked){background:var(--soft)}
+.checks input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--ink)}
 .topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
-.topic{text-align:left;font:inherit;color:var(--ink);padding:16px 20px;cursor:pointer}
-.topic b{font:500 19px var(--display);display:block}
+.topic,.opt{text-align:left;font:inherit;color:var(--ink);cursor:pointer;transition:transform .18s var(--ease),border-color .18s var(--ease),background-color .15s var(--ease)}
+.topic{padding:16px 20px;border-radius:var(--r-md)}
+.topic b{font:600 19px/1.25 var(--display);letter-spacing:-.01em;display:block}
 .topic small{color:var(--muted);font-size:14px}
-.topic[aria-pressed="true"],.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
-.write{margin-top:20px;padding:20px;border-style:dashed}
-.write label{font-weight:700;display:block}
-textarea,select,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 16px}
+.topic[aria-pressed="true"],.opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--soft)}
+.topic:active,.opt:active{transform:scale(.985)}
+.write{margin-top:16px;padding:20px;border:0;background:var(--soft);border-radius:var(--r-md)}
+.write label{font-weight:500;display:block}
+textarea,select,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:11px 14px;
+  transition:border-color .14s var(--ease),box-shadow .14s var(--ease)}
+textarea:focus,select:focus,input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 textarea{min-height:110px;resize:vertical;margin-top:12px}
 .vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 .vh:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
-.write .btn{display:inline-block;font-weight:600;margin-top:12px;padding:9px 18px;font-size:15px;cursor:pointer}
+.write .btn{display:inline-flex;margin-top:12px;background:var(--surface)}
 .thumbs{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 4px}
 .thumbs figure{margin:0;display:grid;gap:6px;justify-items:start}
-.thumbs img{width:132px;height:132px;object-fit:cover;border-radius:12px;border:1px solid var(--line);display:block}
-.thumbs .chip{padding:3px 12px;font-size:13px}
+.thumbs img{width:132px;height:132px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--line);display:block}
+.thumbs .chip{padding:4px 10px;font-size:13px}
 .hint{color:var(--muted);font-size:14px;margin-top:8px}
-.q{margin-top:28px} .q>b{display:block;margin-bottom:10px;font-weight:700}
+.q{margin-top:32px} .q>b{display:block;margin-bottom:10px;font:600 20px/1.25 var(--display);letter-spacing:-.01em}
 .planw{margin-top:12px;display:grid;gap:6px;width:100%}
 .planw input{max-width:420px}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
-.opt{font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer}
-.navrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:36px;padding-top:24px;border-top:1px solid var(--line)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.navrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
+
 /* result */
-.banner{padding:28px;border-radius:18px;border:1px solid var(--line);background:var(--accent-soft);margin-top:14px}
-.banner.l3{background:var(--warn-soft);border-color:var(--warn-line)}
-.banner.l4{background:var(--bad-soft);border-color:var(--bad-line)}
-.banner h1{margin:0 0 6px}
-.banner ul{margin:16px 0 0;padding:16px 0 0 20px;border-top:1px solid var(--line);color:var(--muted)}
-.list{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
-.list li{padding-left:26px;position:relative}
-.list li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:700}
-.list.up li::before{content:"△";color:var(--warn)}
+.banner{padding:clamp(24px,4vw,40px);border-radius:var(--r-lg);background:var(--soft);margin-top:16px}
+.banner.l3{background:var(--warn-soft)}
+.banner.l4{background:var(--bad-soft)}
+.banner h1{margin:0 0 8px;font-size:clamp(34px,4.4vw + 8px,60px);letter-spacing:-.03em}
+.banner p{font-size:18px}
+.banner ul{margin:20px 0 0;padding:20px 0 0 20px;border-top:1px solid var(--line);color:var(--muted)}
+.list{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--line)}
+.list li{padding:12px 0;border-bottom:1px solid var(--line)}
+.list.up li{padding-left:16px;position:relative}
+.list.up li::before{content:"";position:absolute;left:0;top:21px;width:6px;height:6px;border-radius:50%;background:var(--warn)}
 .box{padding:24px;margin-top:28px}
-.cta2{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--accent-soft);border-color:transparent}
+.box .list li:last-child{border-bottom:0;padding-bottom:0}
+.cta2{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--soft);border-color:transparent}
+
 /* find care */
-.filters{padding:20px;display:flex;flex-direction:column;gap:14px;margin:24px 0}
-.frow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.filters{padding:20px;display:flex;flex-direction:column;gap:14px;margin:28px 0;background:var(--soft);border:0}
+.frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .frow select{width:auto;min-width:220px;max-width:100%}
-.chip{font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 16px;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .fc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
-.places{display:flex;flex-direction:column;gap:14px}
+.places{display:flex;flex-direction:column;gap:12px}
 .place{padding:20px}
-.place.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.place.dim{opacity:.6}
+.place.best{border-color:var(--ink)}
+.place.dim{opacity:.62}
+.place.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .place .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.place h3{font-size:21px;margin:2px 0}
+.place h3{font-size:22px;margin:2px 0}
 .place .tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-dl.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px 18px;margin:14px 0 12px;padding-top:14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
-dl.stats div{min-width:0} dl.stats dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)} dl.stats dd{margin:0;font-size:18px}
-.place .act{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
-.place .btn{padding:9px 18px;font-size:15px}
+dl.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px 18px;margin:14px 0 14px;padding-top:14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+dl.stats div{min-width:0} dl.stats dt{font-size:13px;font-weight:500;color:var(--muted)} dl.stats dd{margin:0;font:600 20px/1.3 var(--display);letter-spacing:-.01em}
+.place .act,.soon .act{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
 details summary{cursor:pointer;color:var(--muted)} details p{color:var(--muted);font-size:14px;margin-top:6px}
-.side{display:flex;flex-direction:column;gap:14px}
-.map{overflow:hidden} .map svg{display:block;width:100%;height:auto;border-block:1px solid var(--line)} .map>p{padding:10px 16px;border-top:1px solid var(--line)}
-.maptools{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px}
-.maptools .frow{display:flex;flex-wrap:wrap;gap:6px} .maptools .chip{padding:4px 12px;font-size:14px}
-.zoom{display:flex;gap:6px;flex:none} .zoom .chip{width:34px;padding:4px 0;text-align:center;font-weight:700} .chip:disabled{opacity:.4;cursor:default}
-.map svg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none} .map svg.dragging{cursor:grabbing}
-.soon{padding:28px;max-width:760px} .soon h2{font-size:28px;margin:6px 0 12px} .soon .act{display:flex;flex-wrap:wrap;gap:10px} .soon .btn{padding:9px 18px;font-size:15px}
+.side{display:flex;flex-direction:column;gap:12px;position:sticky;top:84px}
+.map{overflow:hidden} #mapslot>svg{display:block;width:100%;height:auto;border-block:1px solid var(--line)} .map>p{padding:10px 16px;border-top:1px solid var(--line)}
+.map>p:first-of-type{border-top:0}
+.maptools{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px}
+.maptools .frow{gap:6px} .maptools .chip{padding:6px 10px;font-size:14px}
+.zoom{display:flex;gap:6px;flex:none} .zoom .chip{width:34px;padding:6px 0;text-align:center}
+#mapslot>svg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none} #mapslot>svg.dragging{cursor:grabbing}
+.soon{padding:clamp(24px,4vw,40px);max-width:760px;background:var(--soft);border:0} .soon h2{font-size:clamp(26px,3vw,34px);margin:6px 0 12px}
 .pin{cursor:pointer;transition:opacity .15s} .pin.off{opacity:.22} .pin:hover .dot{stroke:var(--ink);stroke-width:2}
 .pin:focus{outline:none} .pin:focus-visible .dot{stroke:var(--ink);stroke-width:3}
 .mapsel{padding:16px} .mapsel .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .mapsel h3{font-size:20px;margin:2px 0}
-.mapsel .tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0} .mapsel .btn{padding:9px 18px;font-size:15px}
-.place.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
-.small{font-size:14px;color:var(--muted)}
-.tablewrap{overflow-x:auto;margin-top:18px}
+.mapsel .tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tablewrap{overflow-x:auto;margin-top:20px}
 table{border-collapse:collapse;width:100%;min-width:620px;font-variant-numeric:tabular-nums}
 th,td{text-align:left;padding:14px 18px;border-top:1px solid var(--line);vertical-align:top}
-thead th{border-top:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+thead th{border-top:0;font-size:13px;color:var(--muted);font-weight:500}
 td small{display:block;color:var(--muted)}
+
 /* how it works */
-.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
-.grid2 .card{padding:14px 18px;border-radius:12px} .grid2 small{display:block;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px;margin-top:20px;border-top:1px solid var(--line)}
+.grid2 .card{padding:14px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none} .grid2 small{display:block;color:var(--muted)}
 .rows>div{padding:18px 22px;border-top:1px solid var(--line)} .rows>div:first-child{border-top:0}
 .rows.lr>div{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap}
-.hw h2{font-size:28px;margin-top:52px} .hw h2+p{color:var(--muted);margin-top:8px}
-.cant{background:var(--bad-soft);border-color:var(--bad-line)} .cant p{color:var(--bad);margin-top:8px}
+.hw h2{font-size:clamp(24px,2vw + 12px,32px);margin-top:64px} .hw h2+p{color:var(--muted);margin-top:10px}
+.cant{background:var(--bad-soft);border-color:transparent} .cant p{color:var(--bad);margin-top:8px}
 svg text{font-family:var(--body)}
-@media (max-width:860px){
-  .hero,.two,.fc{grid-template-columns:minmax(0,1fr)}
-  .steps3{grid-template-columns:minmax(0,1fr)} .steps3 div{border-left:0;border-top:1px solid var(--line)} .steps3 div:first-child{border-top:0}
-  footer .cols,.topics,.grid2{grid-template-columns:minmax(0,1fr)}
+
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane,.leaflet-pane>canvas,.leaflet-pane>svg,.leaflet-tile,.leaflet-tile-container,.leaflet-zoom-box{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:0 0}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0}.leaflet-marker-icon,.leaflet-marker-shadow{display:block}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none}.leaflet-container{-webkit-tap-highlight-color:transparent}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,.4)}.leaflet-tile{filter:inherit;visibility:hidden}.leaflet-tile-loaded{visibility:inherit}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800}.leaflet-overlay-pane svg{-moz-user-select:none}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-vml-shape{width:1px;height:1px}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}.leaflet-bottom,.leaflet-top{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity .2s linear;-moz-transition:opacity .2s linear;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0}svg.leaflet-zoom-animated{will-change:transform}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);-moz-transition:-moz-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-control,.leaflet-popup-pane{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.leaflet-image-layer,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-image-layer.leaflet-interactive,.leaflet-marker-icon.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto}.leaflet-container{background:#ddd;outline-offset:1px}.leaflet-container a{color:#0078a8}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:.75rem;line-height:1.5}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.65);border-radius:4px}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block}.leaflet-bar a:focus,.leaflet-bar a:hover{background-color:#f4f4f4}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,.4);background:#fff;border-radius:5px}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,.8);margin:0}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4}.leaflet-control-attribution a{text-decoration:none}.leaflet-control-attribution a:focus,.leaflet-control-attribution a:hover{text-decoration:underline}.leaflet-attribution-flag{display:inline!important;vertical-align:baseline!important;width:1em;height:.6669em}.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,.8);text-shadow:1px 1px #fff}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers{box-shadow:none}.leaflet-touch .leaflet-bar,.leaflet-touch .leaflet-control-layers{border:2px solid rgba(0,0,0,.2);background-clip:padding-box}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:0 0}.leaflet-container a.leaflet-popup-close-button:focus,.leaflet-container a.leaflet-popup-close-button:hover{color:#585858}.leaflet-popup-scrolled{overflow:auto}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto}.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999}.leaflet-div-icon{background:#fff;border:1px solid #666}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto}.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before,.leaflet-tooltip-top:before{position:absolute;pointer-events:none;border:6px solid transparent;background:0 0;content:""}.leaflet-tooltip-bottom{margin-top:6px}.leaflet-tooltip-top{margin-top:-6px}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff}.leaflet-tooltip-left{margin-left:-6px}.leaflet-tooltip-right{margin-left:6px}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+/* real street map (Leaflet); the drawn sketch stays as the fallback when map tiles can't load */
+.lmap{height:340px;position:relative;z-index:0;isolation:isolate;border-block:1px solid var(--line);background:var(--soft)}
+.lmap.leaflet-container{font-family:var(--body);font-size:13px}
+.lmap .leaflet-control-attribution{font-size:11px} .lmap .leaflet-control-attribution a{background:none;color:var(--muted)}
+.lpin,.you{position:absolute;transform:translate(-50%,-50%);white-space:nowrap}
+.lpin{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font:600 13px/1 var(--body);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;transition:opacity .15s}
+.lpin.more{background:var(--warn)} .lpin.low{background:var(--muted)}
+.lpin.sel{width:36px;height:36px;font-size:15px;box-shadow:0 0 0 3px var(--ink),0 1px 4px rgba(0,0,0,.35)}
+.lpin.off{opacity:.25}
+.you{background:var(--ink);color:#fff;font:600 12px/1 var(--body);padding:5px 8px;border-radius:6px;border:2px solid #fff}
+
+/* hover layer: fine pointers only */
+@media (hover:hover) and (pointer:fine){
+  main a:not(.btn):hover,footer a:hover{background-size:100% 1px,100% 1px}
+  nav a:hover{color:var(--ink)} nav a:hover::after{transform:none}
+  .btn:hover{transform:translateY(-1px);background-color:var(--soft);border-color:var(--ink)}
+  .btn.pri:hover{background-color:color-mix(in oklab,var(--accent) 86%,var(--ink));border-color:transparent}
+  .btn.ghost:hover{background:none;border-color:transparent;color:var(--ink);transform:none}
+  .btn:active{transform:translateY(1px) scale(.985)}
+  .chip:hover:not(:disabled):not([aria-pressed="true"]){background:var(--soft);border-color:var(--line-2)}
+  .topic:hover,.opt:hover{transform:translateY(-2px);border-color:var(--line-2)}
+  .topic:active,.opt:active{transform:scale(.985)}
+  .band .chips button:hover{background:var(--accent-ink);color:var(--accent);transform:translateY(-1px)}
+  .band .btn:hover{background-color:var(--soft);border-color:transparent}
+  .checks label:hover{background:var(--soft)}
+}
+
+/* the hero enters once per visit, then stands */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes lift{from{transform:translateY(105%)}}
+@keyframes settle{from{transform:scale(.98)}}
+html.enter:not(.entered) .hero h1{overflow:hidden;padding-bottom:.08em}
+html.enter:not(.entered) .hero h1 span{display:block;animation:lift .7s var(--ease-enter) both}
+html.enter:not(.entered) .hero [data-in]{animation:rise .52s var(--ease-enter) both;animation-delay:calc(.35s + var(--d) * 60ms)}
+html.enter:not(.entered) .hero .ex{animation:settle .9s var(--ease-enter) both}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition-duration:.01ms !important}
+  .btn:hover,.btn:active,.topic:hover,.opt:hover{transform:none}
+}
+
+@media (max-width:900px){
+  .hero,.two,.fc,.levels{grid-template-columns:minmax(0,1fr)}
+  .hero{min-height:0;padding-block:40px 56px}
+  .side{position:static}
+  footer .cols,.topics,.grid2,.trust>div{grid-template-columns:minmax(0,1fr)}
   nav{order:3;width:100%;margin:0} .sos{margin-left:auto}
 }
+@media (max-width:520px){
+  .in{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .hero .cta .btn,.navrow .btn.pri{flex:1 1 100%}
+  .ladder{--rh:84px} .rung{padding-inline:12px}
+  .rung b{font-size:18px}
+}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <header class="top"><div class="in">
-  <a class="logo" href="#home"><i></i>CareAway</a>
+  <a class="logo" href="#home" aria-label="CareAway home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#14614b"/><path d="M12 6.5v11M6.5 12h11" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>CareAway</a>
   <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a></nav>
   <span class="sos">Emergency: call 911</span>
 </div></header>
 <main id="app"></main>
 <footer><div class="in">
   <div class="cols">
-    <div><h4>CareAway</h4><p style="max-width:44ch">Where to get care, whether your plan covers it, and what it will cost. Made for young adults living in a city that isn't home.</p></div>
-    <div><span class="eyebrow">Product</span><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#how-it-works">How it works &amp; sources</a></div>
-    <div><span class="eyebrow">Emergency</span><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Poison Control · 1-800-222-1222</span></div>
+    <div><h4>CareAway</h4><p style="max-width:44ch;font-size:16px">Where to get care, whether your plan covers it, and what it will cost. Made for young adults living in a city that isn't home.</p></div>
+    <div><p class="eyebrow">Product</p><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#how-it-works">How it works and sources</a></div>
+    <div><p class="eyebrow">Emergency</p><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Poison Control, 1-800-222-1222</span></div>
   </div>
-  <p>CareAway gives general guidance about the <em>level</em> of care to seek. It is not medical advice, does not diagnose, and does not replace a clinician.</p>
+  <p>CareAway gives general guidance about the level of care to seek. It is not medical advice, does not diagnose, and does not replace a clinician.</p>
   <p style="margin-top:8px">Working prototype. Places, cost ranges, waits and travel times are made-up sample data. Coverage rules must be confirmed with your plan.</p>
 </div></footer>
 
@@ -329,6 +435,16 @@ const CITIES = {
   atx:{name:'Austin', hood:'Downtown', water:'Lady Bird Lake', n:['Downtown','Zilker','East Side','Riverside','Mueller']},
   msn:{name:'Madison, WI', hood:'Capitol Square', water:'Lake Mendota', n:['Capitol','Monona','Willy Street','Eastside','Near West']}
 };
+// Real map: each city's centre, and the compass arcs where sample pins may land so none sits in a lake, bay or river.
+const GEO = {chi:[41.8819,-87.6278,[[200,340]]], sf:[37.7599,-122.4148,[[170,370]]], nyc:[40.7549,-73.9840,[[15,38],[195,208]]], la:[34.0617,-118.3005,[[0,360]]],
+  dc:[38.9097,-77.0434,[[-60,140]]], sea:[47.6231,-122.3207,[[150,195]]], atx:[30.2672,-97.7431,[[0,360]]], msn:[43.0747,-89.3842,[[48,62],[240,262]]]};
+function latLng(city, p){
+  const [lat, lng, arcs] = GEO[city];
+  let d = ((Math.atan2(p.x - 288, 160 - p.y) * 180 / Math.PI) + 360) % 360 / 360 * arcs.reduce((t, a) => t + a[1] - a[0], 0), b = arcs[0][0];
+  for (const a of arcs){ if (d <= a[1] - a[0]){ b = a[0] + d; break; } d -= a[1] - a[0]; }
+  const r = b * Math.PI / 180;
+  return {lat: lat + p.mi * Math.cos(r) / 69, lng: lng + p.mi * Math.sin(r) / (69 * Math.cos(lat * Math.PI / 180))};
+}
 function placesFor(city){
   const n = CITIES[city].n;
   return [
@@ -343,7 +459,7 @@ function placesFor(city){
       help:'Nonprofit hospital. It must have a financial assistance (charity care) policy. Ask billing for the application before you pay.'},
     {type:'fqhc', name:n[4] + ' Community Health Center', kind:'Sliding-scale health center', serves:[2,3], mi:2.3, x:70, y:218, wait:'~60 min walk-in', waitMin:60,
       help:'Fees slide with your income and household size. Bring proof of income if you have it.'}
-  ].map((p, i) => ({...p, id:'p' + i}));
+  ].map((p, i) => ({...p, id:'p' + i, ...(p.mi ? latLng(city, p) : {})}));
 }
 const COST = {
   tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],ship:[0,40,'own'],self:[40,90,'self']},
@@ -382,50 +498,56 @@ const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','
 const app = document.getElementById('app');
 
 // ---------- Views ----------
+// The five levels of care, cheapest first. Costs come from the same sample table Find care uses.
+const LADDER = [[null, 'Rest, fluids and pharmacy basics'], ['tele', 'A clinician by video or phone'], ['pcp', 'An office visit, by appointment'], ['uc', 'Seen in person today, no appointment'], ['er', 'Open all hours, for emergencies']];
+const TRIES = [['Mild sore throat', 0], ['Food poisoning', 1], ['Burn with blisters', 3], ['Chest pain', 4]];
 function home(){
-  const ex = [['Telehealth visit','Right level of care · Video · no travel','$0–$30','~15 min wait',1],['Retail clinic · 0.8 mi','Covered away from home','$0–$75','~30 min wait',1],
-    ['Urgent care · 1.5 mi','Right level of care · 9 min by car','$50–$150','~45 min wait',1],['Hospital ER · 2 mi','More care than needed · 11 min by car','$100–$1,500+','2–4 hr wait',0]];
+  const ex = [['Telehealth visit','Right level of care, no travel','$0–$30','~15 min wait',1],['Retail clinic, 0.8 mi','Covered away from home','$0–$75','~30 min wait',1],
+    ['Urgent care, 1.5 mi','Right level of care, 9 min by car','$50–$150','~45 min wait',1],['Hospital ER, 2 mi','More care than needed','$100–$1,500+','2–4 hr wait',0]];
+  const top = Math.sqrt(costFor('er', 'unsure')[1]);
   return `<div class="in">
   <section class="hero">
     <div>
-      <span class="eyebrow tag">Made for a parent's plan, in a city that isn't home</span>
-      <h1>Find the right care. <span>Know the cost first.</span></h1>
-      <p class="lead" style="margin-top:22px">Something's wrong and you're far from home. Answer a few questions and CareAway shows the right level of care, what it typically costs on your plan type, where to go near you, and how long it takes to get there.</p>
-      <div class="cta"><a class="btn pri" href="#triage">Start with my symptoms →</a><a class="btn" href="#find-care">Just show me care near me</a></div>
-      <p class="small" style="margin-top:20px">Triage only, never a diagnosis. Emergency signs are checked before anything else, and nothing you type is saved.</p>
+      <h1><span>Care finder for a parent's health plan</span></h1>
+      <p class="lead" data-in style="--d:0">Sick or hurt in a city that isn't home. Answer a few questions and see the level of care you need, what it usually costs on your plan type, and where to go.</p>
+      <div class="cta"><a class="btn pri" href="#triage" data-in style="--d:1">Start triage</a><a class="btn" href="#find-care" data-in style="--d:2">Find care near me</a></div>
+      <p class="fact" data-in style="--d:3">Works in ${Object.keys(CITIES).length} cities. Triage only, never a diagnosis, and nothing you type is saved.</p>
     </div>
-    <div class="card ex">
-      <div class="hd"><div><span class="eyebrow">Example</span><h3>Burn on your forearm</h3><p class="small">Chicago · Kaiser away-from-home plan</p></div><span class="pill b">Urgent care today</span></div>
-      ${ex.map(r => `<div class="row"><div><b style="font-weight:600">${r[4] ? '✓' : '△'} ${r[0]}</b><small>${r[1]}</small></div><div class="r">${r[2]}<small>${r[3]}</small></div></div>`).join('')}
-      <div class="ft">Sample estimates for this plan type. Not a quote. Confirm with your plan.</div>
-    </div>
+    <div class="card ex"><div class="win">
+      <div class="hd"><div><h3>Burn on your forearm</h3><p class="small">Chicago, on a Kaiser plan away from home</p></div><span class="pill b">Urgent care today</span></div>
+      ${ex.map(r => `<div class="row${r[4] ? '' : ' no'}"><div><b>${r[0]}</b><small>${r[1]}</small></div><div class="r">${r[2]}<small>${r[3]}</small></div></div>`).join('')}
+      <div class="ft">Sample estimates for this plan type, not a quote.</div>
+    </div></div>
   </section></div>
-  <section class="blk"><div class="in">
-    <span class="eyebrow">How it works</span>
-    <h2 style="font-size:clamp(28px,4vw,44px);margin-top:12px;max-width:20ch">Three steps from “something's wrong” to “here's where I'm going.”</h2>
-    <div class="card steps3">
-      <div><b>01</b><h3>Describe what's going on</h3><p>Pick the closest match or write it in your own words, then answer a short set of questions. No account, and nothing you type is stored.</p></div>
-      <div><b>02</b><h3>Get a level of care</h3><p>Self-care, telehealth, primary care, urgent care or the ER. Emergency rules run first, so emergencies never get routed anywhere else.</p></div>
-      <div><b>03</b><h3>Compare your options</h3><p>Nearby places that match that level of care, what they typically cost on your plan type, typical waits, and travel time by car, walking or transit.</p></div>
+  <section class="blk alt"><div class="in levels">
+    <div>
+      <h2>Five levels of care, cheapest first</h2>
+      <p class="lead">Most problems don't need the emergency room. CareAway points you to the lowest level that can treat what you described, and keeps the ER in view.</p>
+      <div class="tries"><span class="small">See where an example lands</span>${TRIES.map(t => `<button class="chip" data-act="demo" data-k="${t[1]}" aria-pressed="${t[1] === 3}">${t[0]}</button>`).join('')}</div>
+    </div>
+    <div class="ladder" id="ladder" style="--i:3"><i class="ind"></i>
+      ${LADDER.map((l, i) => { const c = l[0] ? costFor(l[0], 'unsure') : [0, 0];
+        return `<div class="rung${i === 3 ? ' on' : ''}"><div><b>${LEVELS[i]}</b><small>${l[1]}</small></div><div class="c">${money(c[0], c[1], l[0] === 'er')}</div><i class="bar" style="width:${Math.max(1.5, Math.sqrt(c[1]) / top * 100).toFixed(1)}%"></i></div>`; }).join('')}
+      <p class="small" style="margin-top:14px">Sample cost ranges across all plan types.</p>
     </div>
   </div></section>
   <section class="blk"><div class="in two">
-    <div><span class="eyebrow">Why trust it</span><h2 style="font-size:clamp(28px,4vw,42px);margin:12px 0 16px">Built to point you to care, not to play doctor.</h2>
-      <p class="lead" style="font-size:16px">CareAway never names a condition. It tells you which <em>level</em> of care fits what you described, and always leaves the ER visible when there's any doubt.</p></div>
-    <div class="card trust">
-      <div><h3>Rules before AI</h3><p>Chest pain, trouble breathing, a burn on your face or hands: these stop the flow and send you to 911 or the ER. No model decides that.</p></div>
-      <div><h3>Cited, not guessed</h3><p>Every level-of-care answer links to MedlinePlus so you can read the guidance yourself.</p></div>
-      <div><h3>Nothing stored</h3><p>No account, no symptom history, no photo uploads. Your answers stay on this page and disappear when you close it.</p></div>
+    <div><h2>Rules pick the level, not a model</h2>
+      <p class="lead" style="margin-top:20px">CareAway never names a condition. It tells you which level of care fits what you described.</p>
+      <p style="margin-top:20px"><a href="#how-it-works">Read how the rules work</a></p></div>
+    <div class="trust">
+      <div><h3>Checks emergency signs first</h3><p>Chest pain, trouble breathing, a burn on your face or hands: these stop the questions and send you to 911 or the ER.</p></div>
+      <div><h3>Links every answer to a source</h3><p>Each level-of-care answer links to MedlinePlus, so you can read the guidance yourself.</p></div>
+      <div><h3>Saves nothing you enter</h3><p>No account and no symptom history. Your answers and photos stay on this page and are gone when you close it.</p></div>
     </div>
   </div></section>
   <section class="band blk"><div class="in two" style="align-items:center">
-    <div><span class="eyebrow">Coverage</span><h2 style="margin:12px 0 16px">Your parent's plan still covers you in most cities. It just covers different things.</h2>
-      <p class="lead" style="font-size:16px">Pick your plan type once and CareAway shows what it usually covers away from home, including the Kaiser exception for urgent and emergency care.</p>
-      <a class="btn" href="#find-care">Check what's covered for me →</a></div>
+    <div><h2>Coverage away from home, by plan type</h2>
+      <p class="lead">A parent's plan still covers you in most cities, but it covers different things there. Pick your plan to see what it usually pays for away from home.</p>
+      <a class="btn" href="#find-care">See my coverage</a></div>
     <div class="chips">${Object.entries(PLANS).map(([k, p]) => `<button data-act="plan-go" data-k="${k}">${p[0]}</button>`).join('')}</div>
   </div></section>`;
 }
-
 function prog(){ return `<div class="prog">${[0,1,2,3].map(i => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}<span class="eyebrow">Step ${S.step + 1} of 4</span></div>`; }
 function navrow(back, label){ return `<div class="navrow">${back ? '<button class="btn ghost" data-act="back">← Back</button>' : '<span></span>'}<button class="btn pri" data-act="next">${label || 'Continue'} →</button></div>
   <p class="small" style="margin-top:20px">CareAway gives general guidance about the level of care to seek. It is not medical advice and does not diagnose. Your answers stay on this page and are never sent anywhere.</p>`; }
@@ -464,7 +586,7 @@ function triageView(){
       <div class="q"><b>How bad does it feel?</b>${optBtns('sev', ['Mild','Moderate','Severe'])}</div>
       <div class="q"><b>Can you do your normal activities?</b>${optBtns('act', ['Doing everything normally','Doing less than usual','Can\'t do my normal activities'])}</div>
       <div class="q"><b>How long has it been going on?</b>${optBtns('dur', ['Started today','1–3 days','4–7 days','More than a week'])}</div>
-      <div class="q" style="padding-top:24px;border-top:1px solid var(--line)"><b>Where are you?</b>${optKeys('city', Object.assign(Object.fromEntries(Object.entries(CITIES).map(([k, c]) => [k, c.name])), {other:'Other city'}))}${S.city === 'other' ? '<p class="hint" style="margin-top:10px">We\'re not in your city yet, but we\'re working on it! You\'ll still get your level of care. We just can\'t list places near you yet.</p>' : ''}</div>
+      <div class="q" style="padding-top:24px;border-top:1px solid var(--line)"><b>Where are you?</b>${optKeys('city', Object.assign(Object.fromEntries(Object.entries(CITIES).map(([k, c]) => [k, c.name])), {other:'Other city'}))}${S.city === 'other' ? '<p class="hint" style="margin-top:10px">We\'re not in your city yet, but we\'re working on it. You\'ll still get your level of care. We just can\'t list places near you yet.</p>' : ''}</div>
       <div class="q"><b>How are you covered?</b><p class="hint" style="margin:-6px 0 10px">Plan type is enough. We never ask for a member ID or insurance login.</p>${optKeys('plan', Object.fromEntries(Object.entries(PLANS).map(([k, p]) => [k, p[0]])))}${planInput()}</div>
       ${navrow(true, 'See my level of care')}`;
   }
@@ -537,22 +659,49 @@ function mapSvg(opts){
       <text x="${o.x}" y="${o.y + (sel ? 34 : 27)}" font-size="10.5" font-weight="${sel ? 700 : 400}" fill="var(--ink)" text-anchor="middle">${sel ? o.name : o.kind}</text></g>`; });
   return s + '</svg>';
 }
+// ----- real map -----
+let LM = null, LMel = null, LMmarks = [], LMcity = null, tilesDead = false, lastOpts = [];
+function liveMap(){ return typeof L !== 'undefined' && !tilesDead && S.city !== 'other'; }
+function mountMap(){
+  const slot = document.getElementById('mapslot'); if (!slot || !liveMap()) return;
+  if (!LM){
+    LMel = document.createElement('div'); LMel.className = 'lmap'; slot.replaceChildren(LMel);
+    LM = L.map(LMel, {zoomControl:false, scrollWheelZoom:false});
+    LM.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+    let ok = 0, bad = 0;
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'})
+      .on('tileload', () => { ok++; })
+      .on('tileerror', () => { if (++bad >= 4 && !ok){ tilesDead = true; LM.remove(); LM = null; LMcity = null; render(); } })   // no tiles here: fall back to the sketch
+      .addTo(LM);
+  } else slot.replaceChildren(LMel);
+  LMmarks.forEach(m => m.remove()); LMmarks = [];
+  const g = GEO[S.city], only = MAPTYPES[S.mapType][1], pts = [[g[0], g[1]]];
+  LMmarks.push(L.marker([g[0], g[1]], {icon:L.divIcon({className:'', html:'<span class="you">You</span>', iconSize:[0, 0]}), interactive:false, keyboard:false}).addTo(LM));
+  lastOpts.forEach((o, i) => { if (!o.mi) return;
+    const sel = o.id === S.sel, on = !only || only.includes(o.type);
+    const m = L.marker([o.lat, o.lng], {icon:L.divIcon({className:'', html:`<span class="lpin ${o.fit}${sel ? ' sel' : ''}${on ? '' : ' off'}">${i + 1}</span>`, iconSize:[0, 0]}),
+      title:o.name + ' · ' + money(o.lo, o.hi, o.type === 'er') + ' · ' + o.wait, alt:o.name + ', ' + o.kind, zIndexOffset: sel ? 1000 : 0}).addTo(LM);
+    m.on('click', () => { S.sel = S.sel === o.id ? null : o.id; render(); });
+    LMmarks.push(m); pts.push([o.lat, o.lng]); });
+  LM.invalidateSize();
+  if (LMcity !== S.city){ LM.fitBounds(pts, {padding:[28, 28], animate:false}); LMcity = S.city; }
+}
 function mapCard(opts, c){
   const i = opts.findIndex(o => o.id === S.sel), o = opts[i];
   return `<div class="card map"><div class="maptools"><div class="frow">${Object.entries(MAPTYPES).map(([k, m]) => `<button class="chip" data-act="set" data-k="mapType" data-v="${k}" aria-pressed="${S.mapType === k}">${m[0]}</button>`).join('')}</div>
-      <div class="zoom"><button class="chip" data-act="recenter" aria-label="Recenter map" title="Recenter" ${S.center || S.zoom !== 1 ? '' : 'disabled'}>◎</button><button class="chip" data-act="zoom" data-v="-1" aria-label="Zoom out" ${S.zoom <= 0.6 ? 'disabled' : ''}>−</button><button class="chip" data-act="zoom" data-v="1" aria-label="Zoom in" ${S.zoom >= 2.6 ? 'disabled' : ''}>+</button></div></div>
-    ${mapSvg(opts)}
+      <div class="zoom"><button class="chip" data-act="recenter" aria-label="Recenter map" title="Recenter" ${liveMap() || S.center || S.zoom !== 1 ? '' : 'disabled'}>◎</button><button class="chip" data-act="zoom" data-v="-1" aria-label="Zoom out" ${!liveMap() && S.zoom <= 0.6 ? 'disabled' : ''}>−</button><button class="chip" data-act="zoom" data-v="1" aria-label="Zoom in" ${!liveMap() && S.zoom >= 2.6 ? 'disabled' : ''}>+</button></div></div>
+    <div id="mapslot">${mapSvg(opts)}</div>
     ${o ? `<div class="mapsel"><div class="hd"><div><span class="eyebrow">No. ${i + 1} on the list</span><h3>${o.name}</h3><p class="small">${o.kind} · ${o.mi} mi from ${c.hood}</p></div><button class="chip" data-act="pin" data-k="${o.id}">Close</button></div>
       <div class="tags">${o.fit === 'na' ? '' : `<span class="pill ${FIT[o.fit][1]}">${FIT[o.fit][0]}</span>`}<span class="pill ${COV[o.cov][1]}">${COV[o.cov][0]}</span></div>
       <dl class="stats"><div><dt>Est. cost</dt><dd>${money(o.lo, o.hi, o.type === 'er')}</dd></div><div><dt>Typical wait</dt><dd>${o.wait}</dd></div><div><dt>Travel</dt><dd>${travelText(o)}</dd></div></dl>${dirLink(o, c)}</div>`
-      : '<p class="small">Drag the map to move it around. Select a numbered pin to see its cost, wait and travel time.</p>'}
-    <p class="small">Sketch map, not to scale. Numbers match the list. <span style="color:var(--accent)">●</span> right level <span style="color:var(--warn)">●</span> more than needed <span style="color:var(--muted)">●</span> may not be enough</p></div>`;
+      : `<p class="small">Drag the map to move it${liveMap() ? ', and pinch or use + and − to zoom' : ' around'}. Select a numbered pin to see its cost, wait and travel time.</p>`}
+    <p class="small">${liveMap() ? 'The streets are real. The pins are sample places, not real clinics.' : 'Sketch map, not to scale.'} Numbers match the list. <span style="color:var(--accent)">●</span> right level <span style="color:var(--warn)">●</span> more than needed <span style="color:var(--muted)">●</span> may not be enough</p></div>`;
 }
 const FIT = {right:['Right level of care','ok'], more:['More care than needed','w'], low:['May not be enough','x']};
 function travelText(o){ return o.mi ? o.trips.map(t => t.min + ' min ' + MODE[t.m][0].toLowerCase()).join(' · ') : 'none'; }
 function otherCity(L){
   const q = t => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(t + ' near me');
-  return `<div class="card soon"><span class="eyebrow">Other cities</span><h2>We're not in your city yet, but we're working on it!</h2>
+  return `<div class="card soon"><span class="eyebrow">Other cities</span><h2>We're not in your city yet, but we're working on it.</h2>
     <p>CareAway is starting with ${Object.keys(CITIES).length} cities, and we're working on getting access to more. Thanks for your patience. In the meantime, here's what still works wherever you are:</p>
     <ul class="list"><li><b>Triage works anywhere.</b> ${L == null ? '<a href="#triage">Answer a few questions</a> to see what level of care you need.' : 'You were pointed to <b>' + LEVELS[L].toLowerCase() + '</b>.'}</li>
       <li><b>Telehealth works from any city.</b> Check your plan's app or website for a video visit.</li>
@@ -565,6 +714,7 @@ function findView(){
   const L = S.result ? S.result.level : null, c = CITIES[S.city];
   let opts = S.city === 'other' ? [] : rank(L, planKey(), S.modes, S.city);
   if (S.covered) opts = opts.filter(o => ['in','away','own','free','slide','emer'].includes(o.cov) || (L === 4 && o.type === 'er'));
+  lastOpts = opts;
   let h = `<div class="in page" style="padding-block:44px 64px"><span class="eyebrow">Find care</span><h1>Options near you</h1>
     <p class="lead">${L == null ? 'Ranked by coverage, cost and travel. <a href="#triage">Start triage</a> to rank by the right level of care too.' : 'Ranked for <b>' + LEVELS[L].toLowerCase() + '</b> first, then coverage, cost and travel. The ER is never hidden.'}</p>
     <div class="card filters">
@@ -626,6 +776,7 @@ function route(){ const r = location.hash.slice(1); return VIEWS[r] ? r : 'home'
 function render(top){
   const r = route();
   app.innerHTML = VIEWS[r]();
+  if (r === 'find-care') mountMap();
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + r));
   if (top) window.scrollTo(0, 0);
 }
@@ -642,7 +793,7 @@ function next(){
 // Drag the map to move it (mouse, pen or touch). A drag never counts as a click on a pin.
 let drag = null, dragged = false;
 document.addEventListener('pointerdown', e => {
-  const svg = e.target.closest && e.target.closest('.map svg'); if (!svg || e.button > 0) return;
+  const svg = e.target.closest && e.target.closest('#mapslot>svg'); if (!svg || e.button > 0) return;
   const vb = svg.getAttribute('viewBox').split(' ').map(Number);
   drag = {svg, x:e.clientX, y:e.clientY, vb, k: vb[2] / svg.getBoundingClientRect().width, moved:false, id:e.pointerId};
 });
@@ -658,7 +809,7 @@ const endDrag = e => { if (!drag) return; if (drag.moved){ dragged = true; setTi
 document.addEventListener('pointerup', endDrag);
 document.addEventListener('pointercancel', endDrag);
 document.addEventListener('wheel', e => {
-  const svg = e.target.closest && e.target.closest('.map svg'); if (!svg || !(e.ctrlKey || e.metaKey)) return;
+  const svg = e.target.closest && e.target.closest('#mapslot>svg'); if (!svg || !(e.ctrlKey || e.metaKey)) return;
   e.preventDefault();
   if (!S.center){ const vb = svg.getAttribute('viewBox').split(' ').map(Number); S.center = {x:vb[0] + vb[2] / 2, y:vb[1] + vb[3] / 2}; }
   S.zoom = Math.max(0.6, Math.min(2.6, +(S.zoom * (e.deltaY < 0 ? 1.1 : 0.9)).toFixed(2))); render();
@@ -673,11 +824,17 @@ document.addEventListener('click', e => {
   else if (a === 'set'){ S[k] = /^\d+$/.test(v) ? +v : v; if (S.result && route() === 'triage' && S.step === 4) S.result = triage(S); render(); }
   else if (a === 'mode'){ S.modes = S.modes.includes(k) ? S.modes.filter(m => m !== k) : S.modes.concat(k); if (!S.modes.length) S.modes = [k]; render(); }
   else if (a === 'pin'){ S.sel = S.sel === k ? null : k; render();
-    if (el.dataset.from === 'card' && S.sel){ const m = document.querySelector('.map'); if (m && m.scrollIntoView) m.scrollIntoView({block:'center', behavior:'smooth'}); } }
+    if (el.dataset.from === 'card' && S.sel){ const m = document.querySelector('.map'); if (m && m.scrollIntoView) m.scrollIntoView({block:'center', behavior:'smooth'}); }
+    if (LM && liveMap() && S.sel && el.dataset.from === 'card'){ const o = lastOpts.find(x => x.id === S.sel); if (o && o.mi) LM.panTo([o.lat, o.lng]); } }
+  else if (a === 'zoom' && LM && liveMap()){ if (v > 0) LM.zoomIn(); else LM.zoomOut(); }
+  else if (a === 'recenter' && LM && liveMap()){ LMcity = null; render(); }
   else if (a === 'zoom'){ S.zoom = Math.max(0.6, Math.min(2.6, +(S.zoom + v * 0.4).toFixed(1))); render(); }
   else if (a === 'recenter'){ S.center = null; S.zoom = 1; render(); }
   else if (a === 'plan-go'){ S.plan = k; if (location.hash === '#find-care') render(true); else location.hash = '#find-care'; }
   else if (a === 'rmphoto'){ const u = S.photos.splice(+k, 1)[0]; try { URL.revokeObjectURL(u); } catch (err) {} render(); }
+  else if (a === 'demo'){ const lad = document.getElementById('ladder'); lad.style.setProperty('--i', k);
+    lad.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', i === +k));
+    document.querySelectorAll('[data-act="demo"]').forEach(b => b.setAttribute('aria-pressed', b === el)); }
   else if (a === 'restart'){ clearPhotos(); Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
 });
 document.addEventListener('keydown', e => {
@@ -715,5 +872,9 @@ document.addEventListener('input', e => {
   document.getElementById('matchNote').innerHTML = matchNote();
 });
 window.addEventListener('hashchange', () => { if (route() === 'triage' && S.step === 4 && !S.result) S.step = 0; render(true); });
-if (typeof window !== 'undefined') render(false);
+if (typeof window !== 'undefined'){
+  // the home hero enters once per visit; after that it stands
+  document.documentElement.classList.add('enter'); setTimeout(() => document.documentElement.classList.add('entered'), 1600);
+  render(false);
+}
 </script>
