@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareAway</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@400;500;600&display=swap">
+<style>
+/* Layout: multi-view app (home, triage wizard, find care, how it works) under one sticky header; airy single column, wide two-column on home and find care. */
+:root{
+  color-scheme:light;
+  --bg:#ffffff; --surface:#ffffff; --ink:#1c2738; --muted:#5d6b80; --line:#e3e8ef; --soft:#f6f8fb;
+  --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:#e9f0fe;
+  --ok:#15803d; --ok-soft:#e3f5ea; --warn:#b45309; --warn-soft:#fff8e1; --warn-line:#f2d98a;
+  --bad:#c81e1e; --bad-soft:#fdf0f0; --bad-line:#f3c2c2; --water:#d6e6fb; --street:#e8eef6;
+  --display:"Quicksand","Nunito",system-ui,sans-serif; --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:500;margin:0;line-height:1.15;text-wrap:balance;letter-spacing:-.01em}
+p{margin:0} a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.in{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.narrow{max-width:820px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .in{display:flex;align-items:center;gap:8px 24px;flex-wrap:wrap;padding-block:12px}
+.logo{font:500 26px var(--display);color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo i{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.logo i::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+nav{display:flex;gap:4px 22px;flex-wrap:wrap;margin:0 auto}
+nav a{color:var(--muted);text-decoration:none;padding:4px 2px}
+nav a.on{color:var(--ink);font-weight:700}
+.sos{border:1px solid var(--bad-line);background:var(--bad-soft);color:var(--bad);border-radius:999px;padding:7px 16px;font-weight:600;font-size:14px;white-space:nowrap}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);font-size:18px;max-width:60ch}
+.btn{display:inline-flex;align-items:center;gap:10px;font:600 16px var(--body);border-radius:999px;padding:13px 26px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.red{color:var(--bad);border-color:var(--bad-line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+section.blk{padding-block:56px}
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:48px}
+.hero h1{font-size:clamp(40px,6.4vw,74px);font-weight:600;letter-spacing:-.02em}
+.hero h1 span{color:var(--accent)}
+.hero .tag{display:inline-block;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 16px;margin-bottom:22px}
+.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.ex .hd{padding:20px 22px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.ex h3{font-size:24px;margin-top:4px}
+.ex .row{display:flex;justify-content:space-between;gap:12px;padding:14px 22px;border-top:1px solid var(--line)}
+.ex .row small{display:block;color:var(--muted);font-size:14px}
+.ex .row .r{text-align:right;white-space:nowrap}
+.ex .ft{padding:14px 22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+.pill{display:inline-block;font-size:13px;font-weight:600;padding:4px 12px;border-radius:999px;background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.pill.b{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.w{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.x{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.steps3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:28px;overflow:hidden}
+.steps3 div{padding:30px;border-left:1px solid var(--line)}
+.steps3 div:first-child{border-left:0}
+.steps3 b{font:500 22px var(--display);color:var(--accent)}
+.steps3 h3{font-size:21px;margin:14px 0 8px}
+.steps3 p,.trust p{color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);gap:40px;align-items:start}
+.trust>div{padding:24px 28px;border-top:1px solid var(--line)}
+.trust>div:first-child{border-top:0}
+.trust h3{font-size:20px;margin-bottom:4px}
+.band{background:var(--accent);color:var(--accent-ink)}
+.band .eyebrow,.band .lead{color:var(--accent-ink);opacity:.85}
+.band h2{font-size:clamp(28px,4vw,44px)}
+.band .chips{display:flex;flex-wrap:wrap;gap:10px}
+.band .chips button{font:inherit;color:inherit;background:transparent;cursor:pointer;border:1px solid currentColor;border-radius:999px;padding:9px 18px;transition:background .15s,color .15s}
+.band .chips button:hover,.band .chips button:focus-visible{background:var(--accent-ink);color:var(--accent)}
+.band .btn{background:var(--accent-ink);color:var(--accent);border-color:transparent;margin-top:24px}
+footer{background:var(--soft);border-top:1px solid var(--line);padding-block:40px;color:var(--muted);font-size:14px}
+footer .cols{display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px;padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:20px}
+footer h4{font-size:24px;color:var(--ink);margin-bottom:8px}
+footer .cols a,footer .cols span{display:block;color:var(--ink);text-decoration:none;font-size:16px;margin-top:6px}
+/* wizard */
+.prog{display:flex;align-items:center;gap:8px;margin-bottom:36px}
+.prog i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.prog i.on{background:var(--accent)}
+.prog span{margin-left:8px}
+.wiz h1,.page h1{font-size:clamp(30px,4.6vw,48px);margin:10px 0 12px}
+.checks{margin-top:28px;overflow:hidden}
+.checks label{display:flex;gap:14px;align-items:flex-start;padding:16px 20px;border-top:1px solid var(--line);cursor:pointer}
+.checks label:first-child{border-top:0}
+.checks input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--accent)}
+.topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
+.topic{text-align:left;font:inherit;color:var(--ink);padding:16px 20px;cursor:pointer}
+.topic b{font:500 19px var(--display);display:block}
+.topic small{color:var(--muted);font-size:14px}
+.topic[aria-pressed="true"],.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.write{margin-top:20px;padding:20px;border-style:dashed}
+.write label{font-weight:700;display:block}
+textarea,select,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+textarea{min-height:110px;resize:vertical;margin-top:12px}
+.hint{color:var(--muted);font-size:14px;margin-top:8px}
+.q{margin-top:28px} .q>b{display:block;margin-bottom:10px;font-weight:700}
+.planw{margin-top:12px;display:grid;gap:6px;width:100%}
+.planw input{max-width:420px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.opt{font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer}
+.navrow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:36px;padding-top:24px;border-top:1px solid var(--line)}
+/* result */
+.banner{padding:28px;border-radius:18px;border:1px solid var(--line);background:var(--accent-soft);margin-top:14px}
+.banner.l3{background:var(--warn-soft);border-color:var(--warn-line)}
+.banner.l4{background:var(--bad-soft);border-color:var(--bad-line)}
+.banner h1{margin:0 0 6px}
+.banner ul{margin:16px 0 0;padding:16px 0 0 20px;border-top:1px solid var(--line);color:var(--muted)}
+.list{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.list li{padding-left:26px;position:relative}
+.list li::before{content:"✓";position:absolute;left:0;color:var(--accent);font-weight:700}
+.list.up li::before{content:"△";color:var(--warn)}
+.box{padding:24px;margin-top:28px}
+.cta2{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;background:var(--accent-soft);border-color:transparent}
+/* find care */
+.filters{padding:20px;display:flex;flex-direction:column;gap:14px;margin:24px 0}
+.frow{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.frow select{width:auto;min-width:220px;max-width:100%}
+.chip{font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 16px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.fc{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
+.places{display:flex;flex-direction:column;gap:14px}
+.place{padding:20px}
+.place.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.place.dim{opacity:.6}
+.place .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.place h3{font-size:21px;margin:2px 0}
+.place .tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+dl.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px 18px;margin:14px 0 12px;padding-top:14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+dl.stats div{min-width:0} dl.stats dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)} dl.stats dd{margin:0;font-size:18px}
+.place .act{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.place .btn{padding:9px 18px;font-size:15px}
+details summary{cursor:pointer;color:var(--muted)} details p{color:var(--muted);font-size:14px;margin-top:6px}
+.side{display:flex;flex-direction:column;gap:14px}
+.map{overflow:hidden} .map svg{display:block;width:100%;height:auto;border-block:1px solid var(--line)} .map>p{padding:10px 16px;border-top:1px solid var(--line)}
+.maptools{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px}
+.maptools .frow{display:flex;flex-wrap:wrap;gap:6px} .maptools .chip{padding:4px 12px;font-size:14px}
+.zoom{display:flex;gap:6px;flex:none} .zoom .chip{width:34px;padding:4px 0;text-align:center;font-weight:700} .chip:disabled{opacity:.4;cursor:default}
+.map svg{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none} .map svg.dragging{cursor:grabbing}
+.soon{padding:28px;max-width:760px} .soon h2{font-size:28px;margin:6px 0 12px} .soon .act{display:flex;flex-wrap:wrap;gap:10px} .soon .btn{padding:9px 18px;font-size:15px}
+.pin{cursor:pointer;transition:opacity .15s} .pin.off{opacity:.22} .pin:hover .dot{stroke:var(--ink);stroke-width:2}
+.pin:focus{outline:none} .pin:focus-visible .dot{stroke:var(--ink);stroke-width:3}
+.mapsel{padding:16px} .mapsel .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .mapsel h3{font-size:20px;margin:2px 0}
+.mapsel .tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0} .mapsel .btn{padding:9px 18px;font-size:15px}
+.place.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.small{font-size:14px;color:var(--muted)}
+.tablewrap{overflow-x:auto;margin-top:18px}
+table{border-collapse:collapse;width:100%;min-width:620px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:14px 18px;border-top:1px solid var(--line);vertical-align:top}
+thead th{border-top:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td small{display:block;color:var(--muted)}
+/* how it works */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.grid2 .card{padding:14px 18px;border-radius:12px} .grid2 small{display:block;color:var(--muted)}
+.rows>div{padding:18px 22px;border-top:1px solid var(--line)} .rows>div:first-child{border-top:0}
+.rows.lr>div{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap}
+.hw h2{font-size:28px;margin-top:52px} .hw h2+p{color:var(--muted);margin-top:8px}
+.cant{background:var(--bad-soft);border-color:var(--bad-line)} .cant p{color:var(--bad);margin-top:8px}
+svg text{font-family:var(--body)}
+@media (max-width:860px){
+  .hero,.two,.fc{grid-template-columns:minmax(0,1fr)}
+  .steps3{grid-template-columns:minmax(0,1fr)} .steps3 div{border-left:0;border-top:1px solid var(--line)} .steps3 div:first-child{border-top:0}
+  footer .cols,.topics,.grid2{grid-template-columns:minmax(0,1fr)}
+  nav{order:3;width:100%;margin:0} .sos{margin-left:auto}
+}
+</style>
+
+<header class="top"><div class="in">
+  <a class="logo" href="#home"><i></i>CareAway</a>
+  <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a></nav>
+  <span class="sos">Emergency: call 911</span>
+</div></header>
+<main id="app"></main>
+<footer><div class="in">
+  <div class="cols">
+    <div><h4>CareAway</h4><p style="max-width:44ch">Where to get care, whether your plan covers it, and what it will cost. Made for young adults living in a city that isn't home.</p></div>
+    <div><span class="eyebrow">Product</span><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#how-it-works">How it works &amp; sources</a></div>
+    <div><span class="eyebrow">Emergency</span><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Poison Control · 1-800-222-1222</span></div>
+  </div>
+  <p>CareAway gives general guidance about the <em>level</em> of care to seek. It is not medical advice, does not diagnose, and does not replace a clinician.</p>
+  <p style="margin-top:8px">Working prototype. Places, cost ranges, waits and travel times are made-up sample data. Coverage rules must be confirmed with your plan.</p>
+</div></footer>
+
+<script>
+const MED = 'https://medlineplus.gov/';
+const LEVELS = ['Self-care at home','Telehealth visit','Primary care','Urgent care','Emergency room'];
+const TITLES = ['Self-care at home','Telehealth visit today','Primary care this week','Urgent care today','Emergency room now'];
+const SUBS = ['This is usually something you can look after yourself.','A clinician can look at this by video or phone today.','This should be seen in person, but it can wait for an appointment.','This should be looked at in person today.','This needs to be looked at by an emergency clinician now.'];
+
+// ---------- Triage rules (rules only, no AI; emergency signs run first) ----------
+const RED = [
+  ['Chest pain, pressure or tightness','911'],
+  ['Trouble breathing, or short of breath while sitting still','911'],
+  ['Fainting, or someone can\'t wake you easily','911'],
+  ['Sudden weakness or numbness on one side, slurred speech, or the worst headache of your life','911'],
+  ['Bleeding that won\'t stop after 10 minutes of firm pressure','911'],
+  ['Swelling of the lips, tongue or throat, or a whole-body reaction after a food or sting','911'],
+  ['Thoughts of hurting yourself or someone else','988']
+];
+const TOPICS = {
+  burn:{label:'Burn, scald or sunburn', sub:'Heat, steam, sun, chemicals, electricity', re:/burn|scald/, base:[0,1,3], src:'burns.html', srcName:'Burns',
+    qs:[['On the face, hands, feet, genitals, or over a joint',4],['Bigger than the palm of your hand',4],['From chemicals or electricity',4],['Skin looks white, charred or leathery',4],['It has blistered',3],['Getting more red, swollen or painful after a day or two',3]]},
+  cut:{label:'Cut, scrape or wound', sub:'Including bites, punctures and nosebleeds', re:/\bcut\b|lacerat|gash|wound|stitch|bleed|scrape|punctur/, base:[0,3,3], src:'woundsandinjuries.html', srcName:'Wounds and injuries',
+    qs:[['Deep or gaping, or the edges won\'t stay together',3],['From a bite, or a dirty or rusty object',3],['Something is stuck in it',3],['Numb beyond the cut, or you can\'t move that part',4],['Red streaks, pus or spreading redness',3]]},
+  fever:{label:'Fever, cold, flu or sore throat', sub:'Including cough and congestion', re:/fever|chills|temperature|throat|\bcold\b|\bflu\b|congest|runny|sinus|tonsil/, base:[0,1,3], src:'fever.html', srcName:'Fever',
+    qs:[['103°F (39.4°C) or higher',3],['Stiff neck, confusion, or a rash that doesn\'t fade when pressed',4],['Can\'t swallow your own saliva, or drooling',4],['Fever for more than 3 days',2],['Getting better, then suddenly worse',2]]},
+  sprain:{label:'Sprain, strain or possible fracture', sub:'Twists, falls, and blows to an arm or leg', re:/sprain|strain|twist|ankle|wrist|knee|fell\b|\bfall|fractur|broke/, base:[0,3,3], src:'sprainsandstrains.html', srcName:'Sprains and strains',
+    qs:[['Can\'t put weight on it or use it',3],['Looks bent or out of place',4],['Numb, cold or turning blue',4],['Heard a pop or crack when it happened',3],['Hit your head as well',4]]},
+  stomach:{label:'Stomach pain, vomiting or diarrhea', sub:'Including food poisoning and constipation', re:/stomach|nausea|vomit|diarrh|throw(ing)? up|belly|abdom|constipat|food poison/, base:[0,1,3], src:'abdominalpain.html', srcName:'Abdominal pain',
+    qs:[['Severe pain in one spot, or a hard, rigid belly',4],['Blood in vomit or stool',4],['Can\'t keep fluids down for 24 hours',3],['Very dizzy, or barely peeing',3],['You are or might be pregnant',3]]},
+  rash:{label:'Rash or skin problem', sub:'Including hives, bug bites and infections', re:/rash|hives|itch|\bbite|sting|skin/, base:[0,1,3], src:'rashes.html', srcName:'Rashes',
+    qs:[['Spreading fast, with fever',4],['Blistering, peeling, or close to your eyes',3],['Hot, swollen and getting bigger',3],['Started after a new medicine',3]]},
+  mental:{label:'Mental health or a hard week', sub:'Anxiety, low mood, panic, not sleeping', re:/anxi|depress|panic|can'?t sleep|insomnia|stress|lonely|hopeless|mental/, base:[1,1,3], src:'mentalhealth.html', srcName:'Mental health',
+    qs:[['You have a plan to hurt yourself',4],['You can\'t keep yourself safe right now',4],['Hearing or seeing things others don\'t, or feeling completely out of touch',4],['Withdrawal from alcohol or pills that is making you shake or confused',4]]},
+  breath:{label:'Breathing, cough or heart', sub:'Cough, wheezing, palpitations, chest tightness', re:/cough|wheez|asthma|palpitat|heart|breath/, base:[0,1,3], src:'breathingproblems.html', srcName:'Breathing problems',
+    qs:[['Hard to breathe or wheezing while resting',4],['Heart racing or pounding that won\'t settle',4],['Coughing up blood',4],['Cough for more than 3 weeks, or a high fever',2]]},
+  other:{label:'Something else', sub:'Not listed above. Describe it in your own words', re:/$^/, base:[1,3,3], src:'emergencymedicalservices.html', srcName:'Emergency medical services',
+    qs:[['Pain that is severe or getting worse fast',3],['Confusion, or trouble staying awake',4],['Fever along with it',2],['It has worried you for weeks',2]]}
+};
+const RED_TEXT = [
+  [/chest (pain|pressure|tight)/,'You mentioned chest pain or pressure','911'],
+  [/(can'?t|cannot|can not|hard to|trouble|difficulty|struggling to) breath|short(ness)? of breath|gasping/,'You mentioned trouble breathing','911'],
+  [/face (is )?droop|slurr|can'?t speak|sudden(ly)? (weak|confus|numb)|numb(ness)? (on|in|down) (one|my (left|right))/,'You described possible stroke signs','911'],
+  [/(won'?t|will not|can'?t|cannot|doesn'?t|does not) stop bleeding|bleeding (a lot|heavily|badly)|spurting|gushing/,'You described heavy bleeding','911'],
+  [/passed out|passing out|unconscious|fainted|unresponsive|seizure|convuls/,'You mentioned fainting or a seizure','911'],
+  [/(throat|tongue|lips?|face) (is |are )?(swelling|swollen|closing)|anaphyla/,'You described swelling of the face, mouth or throat','911'],
+  [/overdos|poison(ed|ing)?\b(?! ivy)|swallowed (bleach|pills|a chemical|chemicals)/,'You mentioned a possible overdose or poisoning','911'],
+  [/suicid|kill myself|end my life|hurt(ing)? myself|self.?harm/,'You mentioned thoughts of harming yourself','988'],
+  [/(cough|vomit|throw)(ing)? (up )?blood|blood in (my )?(vomit|stool|poop)/,'You mentioned blood in vomit, cough or stool','er'],
+  [/worst headache/,'You described the worst headache of your life','er'],
+  [/bone (is )?(sticking|showing|poking)|deformed|out of place/,'You described a possible broken bone','er'],
+  [/stiff neck/,'You mentioned a stiff neck','er'],
+  [/(hit|bump|bang)(ed)? my head|head injury|concussion/,'You mentioned a head injury','er'],
+  [/burn[^.]*\b(face|hands?|fingers?|feet|foot|genital|groin|eye)|\b(face|hands?|fingers?|feet|foot|genital|groin|eye)[^.]*burn/,'A burn on the face, hands, feet or genitals','er'],
+  [/(chemical|electric)[^.]*burn|burn[^.]*(chemical|electric)/,'A chemical or electrical burn','er']
+];
+function negated(text, idx){ return /\b(no|not|without|never)\b[^.,;!?]{0,14}$/.test(text.slice(0, idx)); }
+function detectTopic(text){
+  const t = text.toLowerCase();
+  if (/food poison/.test(t)) return 'stomach';
+  for (const k in TOPICS) if (TOPICS[k].re.test(t)) return k;
+  return 'other';
+}
+function textFlags(text){
+  const t = text.toLowerCase(), out = [];
+  if (/food poison/.test(t)) return out.concat(RED_TEXT.filter(r => r[2] !== '911' || !/poison/.test(r[0].source)).filter(r => { const m = r[0].exec(t); return m && !negated(t, m.index); }));
+  for (const r of RED_TEXT){ const m = r[0].exec(t); if (m && !negated(t, m.index)) out.push(r); }
+  return out;
+}
+function triage(s){
+  const reasons = [], topicKey = s.topic || 'other', topic = TOPICS[topicKey], t = s.text.toLowerCase();
+  let call = null, level = 0, sev = s.sev;
+  const bump = k => { if (k === '911') call = '911'; else if (k === '988' && !call) call = '988'; };
+  s.red.forEach(i => { reasons.push(RED[i][0]); level = 4; bump(RED[i][1]); });
+  textFlags(s.text).forEach(r => { reasons.push(r[1]); level = 4; bump(r[2]); });
+  if (/severe|unbearable|excruciating|worst pain|10\/10/.test(t) && sev < 2){ sev = 2; reasons.push('You described it as severe'); }
+  if (level < 4){
+    level = topic.base[sev];
+    reasons.push(topic.label + ', ' + ['mild','moderate','severe'][sev]);
+    s.qs.forEach(i => { const q = topic.qs[i]; if (q[1] > level) level = q[1]; reasons.push(q[0]); });
+    if (topicKey === 'mental' && s.qs.some(i => i < 2)) call = '988';
+    if (s.act === 2 && level < 3){ level = 3; reasons.push('You can\'t do your normal activities'); }
+    else if (s.act === 1 && level < 1){ level = 1; reasons.push('You are doing less than usual'); }
+    if (s.dur === 3 && level < 2){ level = 2; reasons.push('It has lasted more than a week'); }
+    if (topicKey === 'other' && s.text.trim()) reasons.push('We couldn\'t match your description to a group, so we stepped up a level to be safe');
+  }
+  return {level, reasons, call, topic: topicKey};
+}
+
+// ---------- Sample data (illustrative only) ----------
+const PLANS = {
+  bcbs:['Blue Cross Blue Shield (any state)','BlueCard gives in-network access in most states.','https://www.bcbs.com/','Blue Cross Blue Shield Association'],
+  national:['UnitedHealthcare, Aetna or Cigna','National networks are usually in-network anywhere in the U.S.'],
+  kaiser:['Kaiser Permanente, away from home','Away from home, urgent and emergency care are covered. Routine and primary care usually are not.','https://kp.org/travel','Kaiser Permanente · Travel and away-from-home care'],
+  hmo:['A regional HMO or EPO','Outside your home region, usually only emergency and urgent care are covered.'],
+  ppo:['Another PPO plan','You can usually see any provider, but out-of-network visits cost more and may have a separate deductible.'],
+  market:['Marketplace (ACA) plan from another state','Most marketplace plans use a local network. Away from that state, usually only emergencies are covered.','https://www.healthcare.gov/','HealthCare.gov'],
+  medicaid:['Medicaid or CHIP from another state','Medicaid generally covers only emergencies outside the state that issued it.','https://www.medicaid.gov/','Medicaid.gov'],
+  tricare:['TRICARE (military family)','TRICARE works nationwide. Rules depend on whether you have Prime or Select; Prime may need a referral for non-urgent care.','https://www.tricare.mil/','TRICARE'],
+  ship:['A school or student health plan','Your campus health center is usually the cheapest first stop. Off-campus coverage depends on the plan\'s network.'],
+  self:['Uninsured or paying cash','You\'ll pay a cash price. Ask for a good faith estimate before non-emergency care.','https://www.cms.gov/nosurprises','CMS · No Surprises Act'],
+  unsure:['I\'m not sure','We show the widest range and what to ask your plan.'],
+  other:['My plan isn\'t listed','Type your plan\'s name and we match it to the closest plan type. If we can\'t, we show the widest range.']
+};
+// Write-in plan names → closest plan type. First match wins.
+const PLAN_MATCH = [
+  ['kaiser', /kaiser|\bkp\b/],
+  ['bcbs', /blue ?cross|blue ?shield|\bbcbs\b|anthem|carefirst|highmark|premera|regence|horizon|florida blue|wellmark|excellus/],
+  ['medicaid', /medicaid|medi-?cal|\bchip\b|masshealth|badgercare|apple health|soonercare|tenncare/],
+  ['tricare', /tricare|military/],
+  ['ship', /student|school|university|college|campus/],
+  ['market', /marketplace|obamacare|healthcare\.gov|\baca\b|exchange|covered california|ambetter|oscar/],
+  ['national', /united ?health|\buhc\b|\bumr\b|aetna|cigna|meritain/],
+  ['hmo', /\bhmo\b|\bepo\b|health ?partners|upmc|geisinger|priority health|tufts|harvard pilgrim|selecthealth|emblem|healthfirst/],
+  ['ppo', /\bppo\b|\bpos\b/]
+];
+function matchPlan(text){ const t = (text || '').toLowerCase(); const m = PLAN_MATCH.find(p => p[1].test(t)); return m ? m[0] : null; }
+function planKey(){ return S.plan === 'other' ? (matchPlan(S.planText) || 'unsure') : S.plan; }
+function planLabel(){
+  if (S.plan !== 'other') return PLANS[S.plan][0];
+  const t = S.planText.trim(); if (!t) return PLANS.other[0];
+  const k = matchPlan(t);
+  return esc(t) + (k ? ' (treated as: ' + PLANS[k][0] + ')' : ' (not recognized, showing the widest range)');
+}
+function planNote(){
+  const t = S.planText.trim(); if (!t) return 'Type the plan name from your insurance card. No member ID needed.';
+  const k = matchPlan(t);
+  return k ? 'Closest match: <b>' + PLANS[k][0] + '</b>. ' + PLANS[k][1] : 'We don\'t recognize that plan yet, so we\'ll show the widest cost range. Call the number on your card to confirm coverage.';
+}
+function planInput(){ return S.plan !== 'other' ? '' : `<div class="planw"><label for="planText" class="small">What's your plan called?</label><input type="text" id="planText" maxlength="60" autocomplete="off" placeholder="e.g. Anthem, Oscar, Medi-Cal" value="${esc(S.planText)}"><p class="small" id="planNote">${planNote()}</p></div>`; }
+const CITIES = {
+  chi:{name:'Chicago', hood:'the Loop', water:'Lake Michigan', n:['Loop','Lakeshore','South Loop','Riverfront','Near West']},
+  sf:{name:'San Francisco Bay Area', hood:'the Mission', water:'San Francisco Bay', n:['Mission','Dolores','Potrero','Bayview','SoMa']},
+  nyc:{name:'New York City', hood:'Midtown', water:'East River', n:['Midtown','Chelsea','Murray Hill','Eastside','Hudson']},
+  la:{name:'Los Angeles', hood:'Koreatown', water:'Pacific Ocean', n:['Koreatown','Silver Lake','Echo Park','Westside','Mid-City']},
+  dc:{name:'Washington, DC', hood:'Dupont Circle', water:'Potomac River', n:['Dupont','Foggy Bottom','Capitol Hill','Columbia','Shaw']},
+  sea:{name:'Seattle', hood:'Capitol Hill', water:'Elliott Bay', n:['Capitol Hill','Cascade','Belltown','First Hill','Ballard']},
+  atx:{name:'Austin', hood:'Downtown', water:'Lady Bird Lake', n:['Downtown','Zilker','East Side','Riverside','Mueller']},
+  msn:{name:'Madison, WI', hood:'Capitol Square', water:'Lake Mendota', n:['Capitol','Monona','Willy Street','Eastside','Near West']}
+};
+function placesFor(city){
+  const n = CITIES[city].n;
+  return [
+    {type:'retail', name:'QuickStop Clinic', kind:'Retail clinic', serves:[2,3], mi:1.4, x:296, y:52, wait:'~20 min', waitMin:20},
+    {type:'uc', name:n[2] + ' Walk-In Urgent Care', kind:'Urgent care', serves:[2,3], mi:2.6, x:420, y:196, wait:'~25 min', waitMin:25},
+    {type:'tele', name:'Telehealth visit', kind:'Video or phone visit', serves:[1,1], mi:0, wait:'~15 min', waitMin:15},
+    {type:'retail', name:'CornerCare Retail Clinic', kind:'Retail clinic', serves:[2,3], mi:0.8, x:210, y:118, wait:'~30 min', waitMin:30},
+    {type:'pcp', name:n[1] + ' Family Practice', kind:'Primary care office', serves:[2,2], mi:1.1, x:372, y:92, wait:'Next-day appointment', waitMin:240},
+    {type:'uc', name:n[0] + ' Urgent Care', kind:'Urgent care', serves:[2,3], mi:1.5, x:168, y:206, wait:'~45 min', waitMin:45},
+    {type:'free', name:n[2] + ' Free Clinic', kind:'Free clinic', serves:[2,2], mi:1.9, x:330, y:262, wait:'Walk-in, limited hours', waitMin:120, help:'Free for everyone. No insurance needed.'},
+    {type:'er', name:n[3] + ' Medical Center ER', kind:'Hospital emergency room', serves:[4,4], mi:2.0, x:92, y:86, wait:'2–4 hrs', waitMin:180,
+      help:'Nonprofit hospital. It must have a financial assistance (charity care) policy. Ask billing for the application before you pay.'},
+    {type:'fqhc', name:n[4] + ' Community Health Center', kind:'Sliding-scale health center', serves:[2,3], mi:2.3, x:70, y:218, wait:'~60 min walk-in', waitMin:60,
+      help:'Fees slide with your income and household size. Bring proof of income if you have it.'}
+  ].map((p, i) => ({...p, id:'p' + i}));
+}
+const COST = {
+  tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],ship:[0,40,'own'],self:[40,90,'self']},
+  retail:{bcbs:[20,75,'in'],national:[20,75,'in'],kaiser:[0,75,'away'],hmo:[30,100,'away'],ppo:[40,160,'oon'],market:[100,160,'no'],medicaid:[100,160,'no'],tricare:[0,60,'in'],ship:[20,160,'unk'],self:[100,160,'self']},
+  pcp:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[120,250,'no'],hmo:[120,250,'no'],ppo:[50,250,'oon'],market:[120,250,'no'],medicaid:[120,250,'no'],tricare:[0,60,'unk'],ship:[20,250,'unk'],self:[120,250,'self']},
+  uc:{bcbs:[30,100,'in'],national:[30,100,'in'],kaiser:[50,150,'away'],hmo:[50,150,'away'],ppo:[60,300,'oon'],market:[50,300,'unk'],medicaid:[150,300,'no'],tricare:[0,60,'in'],ship:[30,300,'unk'],self:[150,300,'self']},
+  free:{bcbs:[0,0,'free'],national:[0,0,'free'],kaiser:[0,0,'free'],hmo:[0,0,'free'],ppo:[0,0,'free'],market:[0,0,'free'],medicaid:[0,0,'free'],tricare:[0,0,'free'],ship:[0,0,'free'],self:[0,0,'free']},
+  fqhc:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[20,80,'slide'],hmo:[20,80,'slide'],ppo:[20,80,'slide'],market:[20,80,'slide'],medicaid:[20,80,'slide'],tricare:[20,80,'slide'],ship:[20,80,'slide'],self:[20,80,'slide']},
+  er:{bcbs:[150,1500,'in'],national:[150,1500,'in'],kaiser:[100,1500,'away'],hmo:[100,1500,'away'],ppo:[150,1500,'away'],market:[100,1500,'emer'],medicaid:[0,500,'emer'],tricare:[0,150,'in'],ship:[100,1500,'emer'],self:[500,3000,'self']}
+};
+const COV = {in:['In-network','ok'], away:['Covered away from home','ok'], own:['Through your plan\'s own telehealth','ok'], free:['Free','ok'], emer:['Emergencies covered','ok'], oon:['Out-of-network rate','b'],
+  slide:['Sliding scale','b'], self:['Self-pay price','b'], no:['Likely not covered here','x'], unk:['Confirm with your plan','']};
+const MAPQ = {retail:'retail clinic', pcp:'primary care doctor', uc:'urgent care', free:'free clinic', er:'emergency room', fqhc:'community health center'};
+const MODE = {car:['Car', mi => 3 + mi*4, 'driving'], walk:['Walking', mi => mi*20, 'walking'], transit:['Public transit', mi => 6 + mi*7, 'transit']};
+function costFor(type, plan){
+  if (plan !== 'unsure') return COST[type][plan];
+  const v = Object.values(COST[type]);
+  return [Math.min(...v.map(c => c[0])), Math.max(...v.map(c => c[1])), type === 'free' ? 'free' : type === 'fqhc' ? 'slide' : 'unk'];
+}
+const money = (lo, hi, plus) => lo === hi ? '$' + lo : '$' + lo.toLocaleString() + '–$' + hi.toLocaleString() + (plus ? '+' : '');
+function rank(level, plan, modes, city){
+  return placesFor(city).map(p => {
+    const [lo, hi, cov] = costFor(p.type, plan);
+    const fit = level == null ? 'na' : level > p.serves[1] ? 'low' : level < p.serves[0] ? 'more' : 'right';
+    const trips = p.mi ? modes.map(m => ({m, min: Math.round(MODE[m][1](p.mi))})) : [];
+    const best = trips.length ? Math.min(...trips.map(t => t.min)) : 0;
+    const score = (fit === 'low' ? 1e6 : fit === 'more' ? (p.type === 'er' ? 5000 : 400) : 0) + (fit === 'na' && p.type === 'er' ? 5000 : 0)
+      + (cov === 'no' ? 150 : 0) + (lo + hi) / 2 + best * 2 + p.waitMin * 0.4;
+    return {...p, lo, hi, cov, fit, trips, best, score};
+  }).sort((a, b) => a.score - b.score);
+}
+
+// ---------- State ----------
+const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, result:null};
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const app = document.getElementById('app');
+
+// ---------- Views ----------
+function home(){
+  const ex = [['Telehealth visit','Right level of care · Video · no travel','$0–$30','~15 min wait',1],['Retail clinic · 0.8 mi','Covered away from home','$0–$75','~30 min wait',1],
+    ['Urgent care · 1.5 mi','Right level of care · 9 min by car','$50–$150','~45 min wait',1],['Hospital ER · 2 mi','More care than needed · 11 min by car','$100–$1,500+','2–4 hr wait',0]];
+  return `<div class="in">
+  <section class="hero">
+    <div>
+      <span class="eyebrow tag">Made for a parent's plan, in a city that isn't home</span>
+      <h1>Find the right care. <span>Know the cost first.</span></h1>
+      <p class="lead" style="margin-top:22px">Something's wrong and you're far from home. Answer a few questions and CareAway shows the right level of care, what it typically costs on your plan type, where to go near you, and how long it takes to get there.</p>
+      <div class="cta"><a class="btn pri" href="#triage">Start with my symptoms →</a><a class="btn" href="#find-care">Just show me care near me</a></div>
+      <p class="small" style="margin-top:20px">Triage only, never a diagnosis. Emergency signs are checked before anything else, and nothing you type is saved.</p>
+    </div>
+    <div class="card ex">
+      <div class="hd"><div><span class="eyebrow">Example</span><h3>Burn on your forearm</h3><p class="small">Chicago · Kaiser away-from-home plan</p></div><span class="pill b">Urgent care today</span></div>
+      ${ex.map(r => `<div class="row"><div><b style="font-weight:600">${r[4] ? '✓' : '△'} ${r[0]}</b><small>${r[1]}</small></div><div class="r">${r[2]}<small>${r[3]}</small></div></div>`).join('')}
+      <div class="ft">Sample estimates for this plan type. Not a quote. Confirm with your plan.</div>
+    </div>
+  </section></div>
+  <section class="blk"><div class="in">
+    <span class="eyebrow">How it works</span>
+    <h2 style="font-size:clamp(28px,4vw,44px);margin-top:12px;max-width:20ch">Three steps from “something's wrong” to “here's where I'm going.”</h2>
+    <div class="card steps3">
+      <div><b>01</b><h3>Describe what's going on</h3><p>Pick the closest match or write it in your own words, then answer a short set of questions. No account, and nothing you type is stored.</p></div>
+      <div><b>02</b><h3>Get a level of care</h3><p>Self-care, telehealth, primary care, urgent care or the ER. Emergency rules run first, so emergencies never get routed anywhere else.</p></div>
+      <div><b>03</b><h3>Compare your options</h3><p>Nearby places that match that level of care, what they typically cost on your plan type, typical waits, and travel time by car, walking or transit.</p></div>
+    </div>
+  </div></section>
+  <section class="blk"><div class="in two">
+    <div><span class="eyebrow">Why trust it</span><h2 style="font-size:clamp(28px,4vw,42px);margin:12px 0 16px">Built to point you to care, not to play doctor.</h2>
+      <p class="lead" style="font-size:16px">CareAway never names a condition. It tells you which <em>level</em> of care fits what you described, and always leaves the ER visible when there's any doubt.</p></div>
+    <div class="card trust">
+      <div><h3>Rules before AI</h3><p>Chest pain, trouble breathing, a burn on your face or hands: these stop the flow and send you to 911 or the ER. No model decides that.</p></div>
+      <div><h3>Cited, not guessed</h3><p>Every level-of-care answer links to MedlinePlus so you can read the guidance yourself.</p></div>
+      <div><h3>Nothing stored</h3><p>No account, no symptom history, no photo uploads. Your answers stay on this page and disappear when you close it.</p></div>
+    </div>
+  </div></section>
+  <section class="band blk"><div class="in two" style="align-items:center">
+    <div><span class="eyebrow">Coverage</span><h2 style="margin:12px 0 16px">Your parent's plan still covers you in most cities. It just covers different things.</h2>
+      <p class="lead" style="font-size:16px">Pick your plan type once and CareAway shows what it usually covers away from home, including the Kaiser exception for urgent and emergency care.</p>
+      <a class="btn" href="#find-care">Check what's covered for me →</a></div>
+    <div class="chips">${Object.entries(PLANS).map(([k, p]) => `<button data-act="plan-go" data-k="${k}">${p[0]}</button>`).join('')}</div>
+  </div></section>`;
+}
+
+function prog(){ return `<div class="prog">${[0,1,2,3].map(i => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}<span class="eyebrow">Step ${S.step + 1} of 4</span></div>`; }
+function navrow(back, label){ return `<div class="navrow">${back ? '<button class="btn ghost" data-act="back">← Back</button>' : '<span></span>'}<button class="btn pri" data-act="next">${label || 'Continue'} →</button></div>
+  <p class="small" style="margin-top:20px">CareAway gives general guidance about the level of care to seek. It is not medical advice and does not diagnose. Your answers stay on this page and are never sent anywhere.</p>`; }
+function optBtns(key, labels){ return `<div class="opts">${labels.map((l, i) => `<button class="opt" data-act="set" data-k="${key}" data-v="${i}" aria-pressed="${S[key] === i}">${l}</button>`).join('')}</div>`; }
+function optKeys(key, map){ return `<div class="opts">${Object.entries(map).map(([k, l]) => `<button class="opt" data-act="set" data-k="${key}" data-v="${k}" aria-pressed="${S[key] === k}">${l}</button>`).join('')}</div>`; }
+
+function triageView(){
+  if (S.step === 4) return resultView();
+  let h = `<div class="in narrow wiz" style="padding-block:44px 64px">${prog()}`;
+  if (S.step === 0){
+    h += `<span class="eyebrow">Before anything else</span><h1>Is any of this happening right now?</h1>
+      <p class="lead">These are the signs that need 911, not an app. Select any that apply.</p>
+      <div class="card checks">${RED.map((r, i) => `<label><input type="checkbox" id="red-${i}" data-act="red" data-i="${i}" ${S.red.includes(i) ? 'checked' : ''}><span>${r[0]}</span></label>`).join('')}</div>
+      <p class="hint">None of these? Continue. That's the normal path.</p>${navrow(false)}`;
+  } else if (S.step === 1){
+    h += `<span class="eyebrow">What's going on</span><h1>Which of these is closest?</h1>
+      <p class="lead">We only use this to pick the right questions. It isn't a diagnosis, and you can change it any time.</p>
+      <div class="topics">${Object.entries(TOPICS).map(([k, t]) => `<button class="card topic" data-act="topic" data-k="${k}" aria-pressed="${S.topic === k}"><b>${t.label}</b><small>${t.sub}</small></button>`).join('')}</div>
+      <div class="card write"><label for="symptoms">Describe your symptoms in your own words</label>
+        <p class="hint" style="margin-top:2px">Optional. Write a sentence or two and we'll pick the closest match above for you and check it for emergency signs.</p>
+        <textarea id="symptoms" maxlength="600" placeholder="e.g. Burned two fingers on a pot handle last night. Red and sore, no blisters yet.">${esc(S.text)}</textarea>
+        <p class="hint" id="matchNote">${matchNote()}</p></div>${navrow(true)}`;
+  } else if (S.step === 2){
+    const t = TOPICS[S.topic];
+    h += `<span class="eyebrow">Safety questions</span><h1>Anything like this with your ${t.label.toLowerCase()}?</h1>
+      <p class="lead">These change the answer. Select everything that applies, or none.</p>
+      <div class="card checks">${t.qs.map((q, i) => `<label><input type="checkbox" id="q-${i}" data-act="q" data-i="${i}" ${S.qs.includes(i) ? 'checked' : ''}><span>${q[0]}</span></label>`).join('')}</div>
+      <p class="hint">Nothing on this list? Continue and we'll assume none of these are happening.</p>${navrow(true)}`;
+  } else {
+    h += `<span class="eyebrow">A little more detail</span><h1>How bad is it, and how are you covered?</h1>
+      <div class="q"><b>How bad does it feel?</b>${optBtns('sev', ['Mild','Moderate','Severe'])}</div>
+      <div class="q"><b>Can you do your normal activities?</b>${optBtns('act', ['Doing everything normally','Doing less than usual','Can\'t do my normal activities'])}</div>
+      <div class="q"><b>How long has it been going on?</b>${optBtns('dur', ['Started today','1–3 days','4–7 days','More than a week'])}</div>
+      <div class="q" style="padding-top:24px;border-top:1px solid var(--line)"><b>Where are you?</b>${optKeys('city', Object.assign(Object.fromEntries(Object.entries(CITIES).map(([k, c]) => [k, c.name])), {other:'Other city'}))}${S.city === 'other' ? '<p class="hint" style="margin-top:10px">We\'re not in your city yet, but we\'re working on it! You\'ll still get your level of care. We just can\'t list places near you yet.</p>' : ''}</div>
+      <div class="q"><b>How are you covered?</b><p class="hint" style="margin:-6px 0 10px">Plan type is enough. We never ask for a member ID or insurance login.</p>${optKeys('plan', Object.fromEntries(Object.entries(PLANS).map(([k, p]) => [k, p[0]])))}${planInput()}</div>
+      ${navrow(true, 'See my level of care')}`;
+  }
+  return h + '</div>';
+}
+function matchNote(){
+  if (!S.text.trim()) return 'Nothing you write is saved or sent anywhere.';
+  const f = textFlags(S.text);
+  if (f.length) return '<b style="color:var(--bad)">This sounds like it could be an emergency.</b> Continue to see what to do now.';
+  return S.topic ? 'Closest match: <b>' + TOPICS[S.topic].label + '</b>. Tap another one above if that\'s wrong.' : '';
+}
+const TODO = [
+  ['Look after it at home using the linked guidance below.','Check on it again tomorrow.','Not improving in 2–3 days, or getting worse? Step up to a telehealth visit.'],
+  ['Book a video or phone visit today.','Have your plan card and a list of any medicines ready.','The clinician may send you on for in-person care.'],
+  ['Book a primary care or health center visit this week.','On Kaiser or a regional HMO away from home? Your plan\'s own telehealth or a sliding-scale health center may cost less.','If you can\'t get an appointment soon, urgent care also works.'],
+  ['Go to an urgent care or retail clinic today.','Bring your plan card and a photo ID.','Call ahead to check they treat this.'],
+  ['Go to the nearest emergency room now. Have someone else drive if you can.','Don\'t wait to sort out insurance first. Most plans must cover emergency care anywhere.','If things get worse on the way, call 911.']
+];
+function resultView(){
+  const r = S.result, L = r.level, t = TOPICS[r.topic];
+  let h = `<div class="in narrow page" style="padding-block:44px 64px"><span class="eyebrow">Based on what you described</span>
+    <div class="banner l${L}"><h1>${r.call === '911' ? 'Call 911 now' : TITLES[L]}</h1><p>${r.call === '911' ? 'These signs need an ambulance, not an app. Don\'t drive yourself.' : SUBS[L]}</p>
+      <ul>${r.reasons.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+  if (r.call === '988' || r.topic === 'mental') h += `<div class="card box"><h2 style="font-size:22px">You can call or text 988 any time</h2><p class="small" style="margin-top:6px">The 988 Suicide &amp; Crisis Lifeline is free and confidential, 24 hours a day. If you are in immediate danger, call 911.</p></div>`;
+  h += `<h2 style="font-size:28px;margin-top:36px">What to do now</h2><ul class="list">${(r.call === '911' ? ['Call 911 now and say what is happening.','Stay where you are and unlock the door if you can.','If poisoning is possible, Poison Control is 1-800-222-1222.'] : TODO[L]).map(x => `<li>${x}</li>`).join('')}</ul>`;
+  if (L < 4) h += `<div class="card box"><h2 style="font-size:22px">Go up a level if…</h2><p class="small">Trust your gut. If any of these appear, stop waiting and get seen.</p>
+    <ul class="list up">${t.qs.filter(q => q[1] > L).slice(0, 3).map(q => `<li>${q[0]}</li>`).concat('<li>It is getting worse quickly, or any emergency sign from the first step appears</li>').join('')}</ul></div>`;
+  if (r.call !== '911') h += `<div class="card box cta2"><div><h2 style="font-size:22px">Find ${LEVELS[L].toLowerCase()} near you</h2><p class="small">Costs shown for: ${planLabel()}. Ranked by level of care, coverage, cost and travel.</p></div><a class="btn pri" href="#find-care">See options →</a></div>`;
+  h += `<div style="margin-top:36px;padding-top:24px;border-top:1px solid var(--line)"><span class="eyebrow">Source for this guidance</span>
+    <p style="margin-top:8px"><a href="${MED + (L === 4 ? 'emergencymedicalservices.html' : t.src)}" target="_blank" rel="noopener">MedlinePlus · ${L === 4 ? 'Emergency medical services' : t.srcName}</a></p>
+    <p class="small" style="margin-top:12px">General guidance only, not a diagnosis. If you're unsure, or you feel worse, get seen. Emergency: call 911. Mental health crisis: call or text 988.</p>
+    <p class="small" style="margin-top:16px">Answers live only on this page. <a href="#triage" data-act="restart">Start over</a>.</p></div></div>`;
+  return h;
+}
+
+const MAPTYPES = {all:['All', null], uc:['Urgent care', ['uc']], clinic:['Clinics', ['retail','pcp']], low:['Free or sliding scale', ['free','fqhc']], er:['ER', ['er']]};
+function dirLink(o, c){
+  const mode = o.trips.slice().sort((a, b) => a.min - b.min)[0].m;
+  return `<a class="btn pri" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(MAPQ[o.type] + ' near ' + c.hood.replace('the ', '') + ', ' + c.name)}&travelmode=${MODE[mode][2]}">Directions by ${MODE[mode][0].toLowerCase()}</a>`;
+}
+const WORLD = [-200, -130, 800, 430];   // the sketch map is bigger than the window, so there is room to drag
+function clampCenter(cx, cy, w, hh){ return [Math.max(WORLD[0] + w / 2, Math.min(WORLD[2] - w / 2, cx)), Math.max(WORLD[1] + hh / 2, Math.min(WORLD[3] - hh / 2, cy))]; }
+function viewBox(opts){
+  const f = S.center || opts.find(o => o.id === S.sel && o.mi) || {x:300, y:150};
+  const w = 600 / S.zoom, hh = 300 / S.zoom, [cx, cy] = clampCenter(f.x, f.y, w, hh);
+  return [cx - w / 2, cy - hh / 2, w, hh];
+}
+function mapSvg(opts){
+  const [vx, vy, w, hh] = viewBox(opts);
+  let s = `<svg viewBox="${vx} ${vy} ${w} ${hh}" role="group" aria-label="Sketch map of sample places. Drag to move it. Select a pin for details."><rect x="${WORLD[0]}" y="${WORLD[1]}" width="${WORLD[2] - WORLD[0]}" height="${WORLD[3] - WORLD[1]}" fill="var(--soft)"/>
+    <path d="M470 ${WORLD[1]} C455 80 500 170 480 ${WORLD[3]} L${WORLD[2]} ${WORLD[3]} L${WORLD[2]} ${WORLD[1]} Z" fill="var(--water)"/><text x="538" y="150" font-size="11" fill="var(--muted)" text-anchor="middle">${CITIES[S.city].water}</text>`;
+  for (let x = 40 - 62 * 4; x < 470; x += 62) s += `<line x1="${x}" y1="${WORLD[1]}" x2="${x}" y2="${WORLD[3]}" stroke="var(--street)" stroke-width="5"/>`;
+  for (let y = 36 - 58 * 3; y < WORLD[3]; y += 58) s += `<line x1="${WORLD[0]}" y1="${y}" x2="476" y2="${y}" stroke="var(--street)" stroke-width="5"/>`;
+  s += `<circle cx="288" cy="160" r="9" fill="var(--ink)" stroke="var(--surface)" stroke-width="3"/><text x="302" y="164" font-size="12" font-weight="700" fill="var(--ink)">You</text>`;
+  const only = MAPTYPES[S.mapType][1];
+  opts.map((o, i) => ({o, i})).filter(p => p.o.mi).sort((a, b) => (a.o.id === S.sel) - (b.o.id === S.sel)).forEach(({o, i}) => {
+    const c = o.fit === 'low' ? 'var(--muted)' : o.fit === 'more' ? 'var(--warn)' : 'var(--accent)', sel = o.id === S.sel, on = !only || only.includes(o.type);
+    s += `<g class="pin${sel ? ' sel' : ''}${on ? '' : ' off'}" data-act="pin" data-k="${o.id}" role="button" tabindex="0" aria-pressed="${sel}" aria-label="${o.name}, ${o.kind}">
+      <title>${o.name} · ${money(o.lo, o.hi, o.type === 'er')} · ${o.wait}</title>
+      ${sel ? `<line x1="288" y1="160" x2="${o.x}" y2="${o.y}" stroke="${c}" stroke-width="2" stroke-dasharray="5 4"/><circle cx="${o.x}" cy="${o.y}" r="19" fill="none" stroke="${c}" stroke-width="3"/>` : ''}
+      <circle class="dot" cx="${o.x}" cy="${o.y}" r="${sel ? 14 : 12}" fill="${c}"/><text x="${o.x}" y="${o.y + 4}" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">${i + 1}</text>
+      <text x="${o.x}" y="${o.y + (sel ? 34 : 27)}" font-size="10.5" font-weight="${sel ? 700 : 400}" fill="var(--ink)" text-anchor="middle">${sel ? o.name : o.kind}</text></g>`; });
+  return s + '</svg>';
+}
+function mapCard(opts, c){
+  const i = opts.findIndex(o => o.id === S.sel), o = opts[i];
+  return `<div class="card map"><div class="maptools"><div class="frow">${Object.entries(MAPTYPES).map(([k, m]) => `<button class="chip" data-act="set" data-k="mapType" data-v="${k}" aria-pressed="${S.mapType === k}">${m[0]}</button>`).join('')}</div>
+      <div class="zoom"><button class="chip" data-act="recenter" aria-label="Recenter map" title="Recenter" ${S.center || S.zoom !== 1 ? '' : 'disabled'}>◎</button><button class="chip" data-act="zoom" data-v="-1" aria-label="Zoom out" ${S.zoom <= 0.6 ? 'disabled' : ''}>−</button><button class="chip" data-act="zoom" data-v="1" aria-label="Zoom in" ${S.zoom >= 2.6 ? 'disabled' : ''}>+</button></div></div>
+    ${mapSvg(opts)}
+    ${o ? `<div class="mapsel"><div class="hd"><div><span class="eyebrow">No. ${i + 1} on the list</span><h3>${o.name}</h3><p class="small">${o.kind} · ${o.mi} mi from ${c.hood}</p></div><button class="chip" data-act="pin" data-k="${o.id}">Close</button></div>
+      <div class="tags">${o.fit === 'na' ? '' : `<span class="pill ${FIT[o.fit][1]}">${FIT[o.fit][0]}</span>`}<span class="pill ${COV[o.cov][1]}">${COV[o.cov][0]}</span></div>
+      <dl class="stats"><div><dt>Est. cost</dt><dd>${money(o.lo, o.hi, o.type === 'er')}</dd></div><div><dt>Typical wait</dt><dd>${o.wait}</dd></div><div><dt>Travel</dt><dd>${travelText(o)}</dd></div></dl>${dirLink(o, c)}</div>`
+      : '<p class="small">Drag the map to move it around. Select a numbered pin to see its cost, wait and travel time.</p>'}
+    <p class="small">Sketch map, not to scale. Numbers match the list. <span style="color:var(--accent)">●</span> right level <span style="color:var(--warn)">●</span> more than needed <span style="color:var(--muted)">●</span> may not be enough</p></div>`;
+}
+const FIT = {right:['Right level of care','ok'], more:['More care than needed','w'], low:['May not be enough','x']};
+function travelText(o){ return o.mi ? o.trips.map(t => t.min + ' min ' + MODE[t.m][0].toLowerCase()).join(' · ') : 'none'; }
+function otherCity(L){
+  const q = t => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(t + ' near me');
+  return `<div class="card soon"><span class="eyebrow">Other cities</span><h2>We're not in your city yet, but we're working on it!</h2>
+    <p>CareAway is starting with ${Object.keys(CITIES).length} cities, and we're working on getting access to more. Thanks for your patience. In the meantime, here's what still works wherever you are:</p>
+    <ul class="list"><li><b>Triage works anywhere.</b> ${L == null ? '<a href="#triage">Answer a few questions</a> to see what level of care you need.' : 'You were pointed to <b>' + LEVELS[L].toLowerCase() + '</b>.'}</li>
+      <li><b>Telehealth works from any city.</b> Check your plan's app or website for a video visit.</li>
+      <li><b>Your coverage rule above still applies</b>, no matter where you are.</li></ul>
+    <p class="small" style="margin:16px 0 10px">Or search for real places near you:</p>
+    <div class="act"><a class="btn pri" target="_blank" rel="noopener" href="${q('urgent care')}">Urgent care near me</a><a class="btn" target="_blank" rel="noopener" href="${q('emergency room')}">Emergency room near me</a><a class="btn" target="_blank" rel="noopener" href="https://findahealthcenter.hrsa.gov/">Low-cost health centers (HRSA)</a></div>
+    <p class="small" style="margin-top:16px">In an emergency, call 911. You don't need CareAway for that.</p></div>`;
+}
+function findView(){
+  const L = S.result ? S.result.level : null, c = CITIES[S.city];
+  let opts = S.city === 'other' ? [] : rank(L, planKey(), S.modes, S.city);
+  if (S.covered) opts = opts.filter(o => ['in','away','own','free','slide','emer'].includes(o.cov) || (L === 4 && o.type === 'er'));
+  let h = `<div class="in page" style="padding-block:44px 64px"><span class="eyebrow">Find care</span><h1>Options near you</h1>
+    <p class="lead">${L == null ? 'Ranked by coverage, cost and travel. <a href="#triage">Start triage</a> to rank by the right level of care too.' : 'Ranked for <b>' + LEVELS[L].toLowerCase() + '</b> first, then coverage, cost and travel. The ER is never hidden.'}</p>
+    <div class="card filters">
+      <div class="frow"><span class="eyebrow">City</span>${Object.entries(CITIES).map(([k, v]) => `<button class="chip" data-act="set" data-k="city" data-v="${k}" aria-pressed="${S.city === k}">${v.name}</button>`).join('')}<button class="chip" data-act="set" data-k="city" data-v="other" aria-pressed="${S.city === 'other'}">Other</button></div>
+      <div class="frow"><label for="plan" class="small">Coverage</label><select id="plan" data-act="plan">${Object.entries(PLANS).map(([k, p]) => `<option value="${k}" ${S.plan === k ? 'selected' : ''}>${p[0]}</option>`).join('')}</select>
+        <span class="small" style="margin-left:auto">Getting there</span>${Object.entries(MODE).map(([k, m]) => `<button class="chip" data-act="mode" data-k="${k}" aria-pressed="${S.modes.includes(k)}">${m[0]}</button>`).join('')}</div>
+      ${planInput()}<label class="frow" for="covered"><input type="checkbox" id="covered" data-act="covered" ${S.covered ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent)"> Only show options that are covered or offer reduced fees</label>
+    </div>
+    <p class="small" style="margin-bottom:16px"><b>${planLabel()}:</b> ${PLANS[planKey()][1]} Confirm with your plan before non-emergency care.</p>`;
+  if (S.city === 'other') return h + otherCity(L) + '</div>';
+  h += `<div class="fc"><div class="places">`;
+  if (!opts.length) h += '<div class="card place">No options match that filter. Untick it to see everything.</div>';
+  opts.forEach((o, i) => {
+    const best = i === 0 && o.fit !== 'low';
+    h += `<article class="card place${best ? ' best' : ''}${o.fit === 'low' ? ' dim' : ''}${o.id === S.sel ? ' sel' : ''}"><div class="hd"><div><span class="eyebrow">No. ${i + 1}</span><h3>${o.name}</h3>
+        <p class="small">${o.kind}${o.mi ? ' · ' + o.mi + ' mi from ' + c.hood : ''}</p></div>${best ? '<span class="pill b">Best overall</span>' : ''}</div>
+      <div class="tags">${o.fit === 'na' ? '' : `<span class="pill ${FIT[o.fit][1]}">${FIT[o.fit][0]}</span>`}<span class="pill ${COV[o.cov][1]}">${COV[o.cov][0]}</span></div>
+      <dl class="stats"><div><dt>Est. cost</dt><dd>${money(o.lo, o.hi, o.type === 'er')}</dd></div><div><dt>Typical wait</dt><dd>${o.wait}</dd></div><div><dt>Travel</dt><dd>${travelText(o)}</dd></div></dl>
+      <div class="act">${o.mi ? dirLink(o, c) + `<button class="btn" data-act="pin" data-k="${o.id}" data-from="card">${o.id === S.sel ? 'Shown on map' : 'Show on map'}</button>` : ''}
+        <details><summary>Why this one</summary><p>${o.fit === 'right' ? 'It matches the level of care you were pointed to.' : o.fit === 'more' ? 'It can treat this, but it is more care, and usually more cost, than you need.' : o.fit === 'low' ? 'It usually can\'t treat what you described.' : 'Run triage to see whether this is the right level of care.'}
+          ${o.cov === 'no' ? ' Your plan likely won\'t pay here, so the self-pay price is shown.' : ''}${o.help ? ' <b>Financial help:</b> ' + o.help : ''}${o.mi ? ' The button searches Maps for a real ' + MAPQ[o.type] + ' nearby, since this place is a sample.' : ''}</p></details></div></article>`;
+  });
+  h += `</div><div class="side">${mapCard(opts, c)}
+    <div class="card box" style="margin-top:0"><h2 style="font-size:22px">If cost is the problem</h2><ul class="list"><li>Nonprofit hospitals must have a financial assistance policy. Ask before you're billed.</li><li>Federally funded health centers set fees on a sliding scale based on income.</li><li>Paying cash? You can ask for a good faith estimate before non-emergency care.</li></ul>
+      <p style="margin-top:14px"><a href="https://www.cms.gov/nosurprises" target="_blank" rel="noopener">Your rights (CMS)</a> · <a href="https://findahealthcenter.hrsa.gov/" target="_blank" rel="noopener">Find a health center (HRSA)</a></p></div>
+    <p class="small">Places, prices, waits and travel times here are made-up sample records to show how CareAway works. Don't rely on them for a real decision yet.</p></div></div>
+    <h2 style="font-size:34px;margin-top:52px">Side by side</h2><p class="lead" style="font-size:16px">The same options compared on level of care, estimated cost, typical wait and travel time.</p>
+    <div class="card tablewrap"><table><thead><tr><th>Option</th><th>Right level?</th><th>Est. cost</th><th>Typical wait</th><th>Travel</th></tr></thead><tbody>
+    ${opts.map(o => `<tr><td>${o.name}<small>${COV[o.cov][0]}</small></td><td>${o.fit === 'na' ? '—' : o.fit === 'right' ? 'Yes' : o.fit === 'more' ? 'More than needed' : 'Not enough'}</td><td>${money(o.lo, o.hi, o.type === 'er')}</td><td>${o.wait}</td><td>${travelText(o)}</td></tr>`).join('')}
+    </tbody></table></div><p class="small" style="margin-top:12px">Cost ranges are typical for a plan type, not a quote. Waits are typical, never live.</p></div>`;
+  return h;
+}
+
+function howView(){
+  return `<div class="in narrow page hw" style="max-width:960px;padding-block:44px 64px"><span class="eyebrow">How it works</span><h1>The rules come first. The map comes after.</h1>
+    <p class="lead">CareAway is a triage tool, not a diagnosis. It asks the questions a nurse line would ask, points you to a level of care, then shows what that costs and where to go.</p>
+    <h2>1 · Emergency signs, before anything else</h2><p>These answers override everything else. If any is selected, or shows up in what you write, CareAway stops and tells you to call 911 or 988.</p>
+    <div class="grid2">${RED.map(r => `<div class="card">${r[0]}</div>`).join('')}</div>
+    <h2>2 · Level of care, never a condition</h2><p>Each of the ${Object.keys(TOPICS).length} symptom groups has a short list of escalation signs. Those signs, plus how bad it is, how long it has lasted and how much it affects your day, decide between five levels. You only ever see a <em>level</em>, with its source.</p>
+    <div class="grid2">${Object.values(TOPICS).map(t => `<div class="card">${t.label}<small>${t.qs.length} escalation signs · MedlinePlus</small></div>`).join('')}</div>
+    <h2>3 · Your own words</h2><p>The write-in box is read by keyword rules on this page, not by AI. It picks the closest symptom group and looks for emergency phrases. If it can't match what you wrote, it steps up a level to be safe.</p>
+    <h2>4 · Coverage by plan type, not member ID</h2><p>CareAway never asks for a member ID, password or insurance login. It works from your plan <em>type</em>.</p>
+    <div class="card rows" style="margin-top:18px">${Object.values(PLANS).map(p => `<div><b style="font-weight:600">${p[0]}</b><p class="small">${p[1]}</p>${p[2] ? `<a class="small" href="${p[2]}" target="_blank" rel="noopener">${p[3]}</a>` : ''}</div>`).join('')}</div>
+    <p class="small" style="margin-top:12px">Every coverage label is an estimate. Confirm with your plan before non-emergency care. The member services number is on your card.</p>
+    <h2>5 · Where facility, cost and wait data will come from</h2><p>This prototype uses made-up sample records. The real app is planned to use these public sources.</p>
+    <div class="card rows lr" style="margin-top:18px">
+      <div><span>Free and sliding-scale clinics</span><a href="https://findahealthcenter.hrsa.gov/" target="_blank" rel="noopener">HRSA Health Center Program</a></div>
+      <div><span>Hospitals, ERs and median ER times</span><a href="https://data.cms.gov/provider-data/" target="_blank" rel="noopener">CMS Provider Data Catalog</a></div>
+      <div><span>Symptom guidance</span><a href="https://medlineplus.gov/" target="_blank" rel="noopener">MedlinePlus</a></div>
+      <div><span>Patient billing rights</span><a href="https://www.cms.gov/nosurprises" target="_blank" rel="noopener">CMS · No Surprises Act</a></div></div>
+    <div class="card box" style="background:var(--soft)"><h2 style="font-size:26px;margin:0">Privacy, in plain terms</h2><ul class="list" style="color:var(--muted)"><li>No account, no sign-in, no profile.</li><li>Your answers stay on this page and are never sent anywhere. Closing it clears them.</li><li>No photos are uploaded, and nothing is shared with an insurer.</li><li>Photo-based triage is deliberately not built yet. It needs a clinical review first.</li></ul></div>
+    <div class="card box cant"><h2 style="font-size:26px;margin:0">What CareAway can't do</h2><p>It can't tell you what's wrong with you, and it can't guarantee a cost. It can be wrong, which is why the ER is always visible and why every answer says to step up if something changes. In an emergency, call 911. Mental health crisis: call or text 988.</p></div>
+    <div style="margin-top:28px"><a class="btn pri" href="#triage">Start triage</a></div></div>`;
+}
+
+// ---------- Router and events ----------
+const VIEWS = {home, triage: triageView, 'find-care': findView, 'how-it-works': howView};
+function route(){ const r = location.hash.slice(1); return VIEWS[r] ? r : 'home'; }
+function render(top){
+  const r = route();
+  app.innerHTML = VIEWS[r]();
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + r));
+  if (top) window.scrollTo(0, 0);
+}
+function finish(){ S.result = triage(S); S.step = 4; }
+function next(){
+  if (S.step === 0){ if (S.red.length) finish(); else S.step = 1; }
+  else if (S.step === 1){
+    if (!S.topic) S.topic = S.text.trim() ? detectTopic(S.text) : 'other';
+    if (textFlags(S.text).length) finish(); else S.step = 2;
+  }
+  else if (S.step === 2) S.step = 3;
+  else finish();
+}
+// Drag the map to move it (mouse, pen or touch). A drag never counts as a click on a pin.
+let drag = null, dragged = false;
+document.addEventListener('pointerdown', e => {
+  const svg = e.target.closest && e.target.closest('.map svg'); if (!svg || e.button > 0) return;
+  const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+  drag = {svg, x:e.clientX, y:e.clientY, vb, k: vb[2] / svg.getBoundingClientRect().width, moved:false, id:e.pointerId};
+});
+document.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved){ if (Math.abs(dx) + Math.abs(dy) < 5) return; drag.moved = true; drag.svg.classList.add('dragging'); try { drag.svg.setPointerCapture(e.pointerId); } catch (err) {} }
+  const [w, hh] = [drag.vb[2], drag.vb[3]], [cx, cy] = clampCenter(drag.vb[0] + w / 2 - dx * drag.k, drag.vb[1] + hh / 2 - dy * drag.k, w, hh);
+  S.center = {x:cx, y:cy};
+  drag.svg.setAttribute('viewBox', (cx - w / 2) + ' ' + (cy - hh / 2) + ' ' + w + ' ' + hh);
+});
+const endDrag = e => { if (!drag) return; if (drag.moved){ dragged = true; setTimeout(() => { dragged = false; }, 0); render(); } drag = null; };
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
+document.addEventListener('wheel', e => {
+  const svg = e.target.closest && e.target.closest('.map svg'); if (!svg || !(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  if (!S.center){ const vb = svg.getAttribute('viewBox').split(' ').map(Number); S.center = {x:vb[0] + vb[2] / 2, y:vb[1] + vb[3] / 2}; }
+  S.zoom = Math.max(0.6, Math.min(2.6, +(S.zoom * (e.deltaY < 0 ? 1.1 : 0.9)).toFixed(2))); render();
+}, {passive:false});
+document.addEventListener('click', e => {
+  if (dragged){ dragged = false; return; }
+  const el = e.target.closest('[data-act]'); if (!el || el.tagName === 'INPUT' || el.tagName === 'SELECT') return;
+  const a = el.dataset.act, k = el.dataset.k, v = el.dataset.v;
+  if (a === 'next'){ next(); render(true); }
+  else if (a === 'back'){ S.step = Math.max(0, S.step - 1); render(true); }
+  else if (a === 'topic'){ if (S.topic !== k) S.qs = []; S.topic = k; S.manual = true; render(); }
+  else if (a === 'set'){ S[k] = /^\d+$/.test(v) ? +v : v; if (S.result && route() === 'triage' && S.step === 4) S.result = triage(S); render(); }
+  else if (a === 'mode'){ S.modes = S.modes.includes(k) ? S.modes.filter(m => m !== k) : S.modes.concat(k); if (!S.modes.length) S.modes = [k]; render(); }
+  else if (a === 'pin'){ S.sel = S.sel === k ? null : k; render();
+    if (el.dataset.from === 'card' && S.sel){ const m = document.querySelector('.map'); if (m && m.scrollIntoView) m.scrollIntoView({block:'center', behavior:'smooth'}); } }
+  else if (a === 'zoom'){ S.zoom = Math.max(0.6, Math.min(2.6, +(S.zoom + v * 0.4).toFixed(1))); render(); }
+  else if (a === 'recenter'){ S.center = null; S.zoom = 1; render(); }
+  else if (a === 'plan-go'){ S.plan = k; if (location.hash === '#find-care') render(true); else location.hash = '#find-care'; }
+  else if (a === 'restart'){ Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
+});
+document.addEventListener('keydown', e => {
+  const el = e.target.closest && e.target.closest('.pin');
+  if (el && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); S.sel = S.sel === el.dataset.k ? null : el.dataset.k; render();
+    const again = document.querySelector('.pin[data-k="' + el.dataset.k + '"]'); if (again) again.focus(); }
+});
+document.addEventListener('change', e => {
+  const el = e.target, a = el.dataset.act; if (!a) return;
+  const tog = (arr, i) => el.checked ? arr.concat(i) : arr.filter(x => x !== i);
+  if (a === 'red') S.red = tog(S.red, +el.dataset.i);
+  else if (a === 'q') S.qs = tog(S.qs, +el.dataset.i);
+  else if (a === 'plan'){ S.plan = el.value; render(); }
+  else if (a === 'covered'){ S.covered = el.checked; render(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'planText'){
+    S.planText = e.target.value;
+    if (route() === 'find-care'){
+      const pos = e.target.selectionStart; render();
+      const i = document.getElementById('planText'); if (i){ i.focus(); try { i.setSelectionRange(pos, pos); } catch (err) {} }
+    } else document.getElementById('planNote').innerHTML = planNote();
+    return;
+  }
+  if (e.target.id !== 'symptoms') return;
+  S.text = e.target.value;
+  if (!S.manual){
+    const k = S.text.trim() ? detectTopic(S.text) : null;
+    if (k !== S.topic){ S.topic = k; S.qs = []; document.querySelectorAll('.topic').forEach(b => b.setAttribute('aria-pressed', b.dataset.k === k)); }
+  }
+  document.getElementById('matchNote').innerHTML = matchNote();
+});
+window.addEventListener('hashchange', () => { if (route() === 'triage' && S.step === 4 && !S.result) S.step = 0; render(true); });
+if (typeof window !== 'undefined') render(false);
+</script>
