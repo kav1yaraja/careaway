@@ -237,6 +237,22 @@ svg text{font-family:var(--body)}
 .lpin.off{opacity:.25}
 .you{background:var(--ink);color:#fff;font:600 12px/1 var(--body);padding:5px 8px;border-radius:6px;border:2px solid #fff}
 
+/* extra help */
+.crisis{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;margin-top:24px;padding:16px 20px;border-radius:var(--r-md);background:var(--bad-soft);color:var(--ink)}
+.crisis b{color:var(--bad)} .crisis a{font-weight:600}
+.help .hh{font-size:clamp(26px,2.4vw + 12px,36px);margin-top:36px}
+.help .sub{font-size:20px;margin-top:36px}
+.res{margin-top:20px;border-top:1px solid var(--line-2)}
+.res>div{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px 32px;padding:20px 0;border-bottom:1px solid var(--line)}
+.res h3{font-size:20px} .res p{color:var(--muted);margin-top:4px} .res .how{color:var(--ink);margin:0;line-height:1.9}
+.res .how a{font-weight:600}
+.helpcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:32px}
+.helpcards .card{font:inherit;text-align:left;color:var(--ink);padding:22px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:transform .18s var(--ease),border-color .18s var(--ease)}
+.helpcards b{font:600 20px/1.25 var(--display)} .helpcards small{color:var(--muted);font-size:15px;flex:1}
+.helpcards .go{color:var(--accent);font-weight:500;margin-top:10px}
+@media (hover:hover) and (pointer:fine){ .helpcards .card:hover{transform:translateY(-2px);border-color:var(--line-2)} }
+@media (max-width:900px){ .helpcards,.res>div{grid-template-columns:minmax(0,1fr)} }
+
 /* hover layer: fine pointers only */
 @media (hover:hover) and (pointer:fine){
   main a:not(.btn):hover,footer a:hover{background-size:100% 1px,100% 1px}
@@ -284,15 +300,15 @@ html.enter:not(.entered) .hero .ex{animation:settle .9s var(--ease-enter) both}
 
 <header class="top"><div class="in">
   <a class="logo" href="#home" aria-label="CareAway home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#14614b"/><path d="M12 6.5v11M6.5 12h11" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>CareAway</a>
-  <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a></nav>
+  <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a><a href="#help">Veterans &amp; housing</a></nav>
   <span class="sos">Emergency: call 911</span>
 </div></header>
 <main id="app"></main>
 <footer><div class="in">
   <div class="cols">
     <div><h4>CareAway</h4><p style="max-width:44ch;font-size:16px">Where to get care, whether your plan covers it, and what it will cost. Made for young adults living in a city that isn't home.</p></div>
-    <div><p class="eyebrow">Product</p><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#how-it-works">How it works and sources</a></div>
-    <div><p class="eyebrow">Emergency</p><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Poison Control, 1-800-222-1222</span></div>
+    <div><p class="eyebrow">Product</p><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#help">Help for veterans and people without housing</a><a href="#how-it-works">How it works and sources</a></div>
+    <div><p class="eyebrow">Emergency</p><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Veterans Crisis Line, 988 then press 1</span><span>Poison Control, 1-800-222-1222</span></div>
   </div>
   <p>CareAway gives general guidance about the level of care to seek. It is not medical advice, does not diagnose, and does not replace a clinician.</p>
   <p style="margin-top:8px">Working prototype. Places, cost ranges, waits and travel times are made-up sample data. Coverage rules must be confirmed with your plan.</p>
@@ -393,6 +409,7 @@ const PLANS = {
   ppo:['Another PPO plan','You can usually see any provider, but out-of-network visits cost more and may have a separate deductible.'],
   market:['Marketplace (ACA) plan from another state','Most marketplace plans use a local network. Away from that state, usually only emergencies are covered.','https://www.healthcare.gov/','HealthCare.gov'],
   medicaid:['Medicaid or CHIP from another state','Medicaid generally covers only emergencies outside the state that issued it.','https://www.medicaid.gov/','Medicaid.gov'],
+  va:['VA health care (veteran)','VA covers care at VA clinics in any city. Community urgent care and non-VA emergency rooms can be covered too: call VA first when you can, and tell VA soon after an emergency visit.','https://www.va.gov/health-care/','VA health care'],
   tricare:['TRICARE (military family)','TRICARE works nationwide. Rules depend on whether you have Prime or Select; Prime may need a referral for non-urgent care.','https://www.tricare.mil/','TRICARE'],
   ship:['A school or student health plan','Your campus health center is usually the cheapest first stop. Off-campus coverage depends on the plan\'s network.'],
   self:['Uninsured or paying cash','You\'ll pay a cash price. Ask for a good faith estimate before non-emergency care.','https://www.cms.gov/nosurprises','CMS · No Surprises Act'],
@@ -404,6 +421,7 @@ const PLAN_MATCH = [
   ['kaiser', /kaiser|\bkp\b/],
   ['bcbs', /blue ?cross|blue ?shield|\bbcbs\b|anthem|carefirst|highmark|premera|regence|horizon|florida blue|wellmark|excellus/],
   ['medicaid', /medicaid|medi-?cal|\bchip\b|masshealth|badgercare|apple health|soonercare|tenncare/],
+  ['va', /\bva\b|veteran|champva/],
   ['tricare', /tricare|military/],
   ['ship', /student|school|university|college|campus/],
   ['market', /marketplace|obamacare|healthcare\.gov|\baca\b|exchange|covered california|ambetter|oscar/],
@@ -462,13 +480,13 @@ function placesFor(city){
   ].map((p, i) => ({...p, id:'p' + i, ...(p.mi ? latLng(city, p) : {})}));
 }
 const COST = {
-  tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],ship:[0,40,'own'],self:[40,90,'self']},
-  retail:{bcbs:[20,75,'in'],national:[20,75,'in'],kaiser:[0,75,'away'],hmo:[30,100,'away'],ppo:[40,160,'oon'],market:[100,160,'no'],medicaid:[100,160,'no'],tricare:[0,60,'in'],ship:[20,160,'unk'],self:[100,160,'self']},
-  pcp:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[120,250,'no'],hmo:[120,250,'no'],ppo:[50,250,'oon'],market:[120,250,'no'],medicaid:[120,250,'no'],tricare:[0,60,'unk'],ship:[20,250,'unk'],self:[120,250,'self']},
-  uc:{bcbs:[30,100,'in'],national:[30,100,'in'],kaiser:[50,150,'away'],hmo:[50,150,'away'],ppo:[60,300,'oon'],market:[50,300,'unk'],medicaid:[150,300,'no'],tricare:[0,60,'in'],ship:[30,300,'unk'],self:[150,300,'self']},
-  free:{bcbs:[0,0,'free'],national:[0,0,'free'],kaiser:[0,0,'free'],hmo:[0,0,'free'],ppo:[0,0,'free'],market:[0,0,'free'],medicaid:[0,0,'free'],tricare:[0,0,'free'],ship:[0,0,'free'],self:[0,0,'free']},
-  fqhc:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[20,80,'slide'],hmo:[20,80,'slide'],ppo:[20,80,'slide'],market:[20,80,'slide'],medicaid:[20,80,'slide'],tricare:[20,80,'slide'],ship:[20,80,'slide'],self:[20,80,'slide']},
-  er:{bcbs:[150,1500,'in'],national:[150,1500,'in'],kaiser:[100,1500,'away'],hmo:[100,1500,'away'],ppo:[150,1500,'away'],market:[100,1500,'emer'],medicaid:[0,500,'emer'],tricare:[0,150,'in'],ship:[100,1500,'emer'],self:[500,3000,'self']}
+  tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],va:[0,15,'own'],ship:[0,40,'own'],self:[40,90,'self']},
+  retail:{bcbs:[20,75,'in'],national:[20,75,'in'],kaiser:[0,75,'away'],hmo:[30,100,'away'],ppo:[40,160,'oon'],market:[100,160,'no'],medicaid:[100,160,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[20,160,'unk'],self:[100,160,'self']},
+  pcp:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[120,250,'no'],hmo:[120,250,'no'],ppo:[50,250,'oon'],market:[120,250,'no'],medicaid:[120,250,'no'],tricare:[0,60,'unk'],va:[0,50,'unk'],ship:[20,250,'unk'],self:[120,250,'self']},
+  uc:{bcbs:[30,100,'in'],national:[30,100,'in'],kaiser:[50,150,'away'],hmo:[50,150,'away'],ppo:[60,300,'oon'],market:[50,300,'unk'],medicaid:[150,300,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[30,300,'unk'],self:[150,300,'self']},
+  free:{bcbs:[0,0,'free'],national:[0,0,'free'],kaiser:[0,0,'free'],hmo:[0,0,'free'],ppo:[0,0,'free'],market:[0,0,'free'],medicaid:[0,0,'free'],tricare:[0,0,'free'],va:[0,0,'free'],ship:[0,0,'free'],self:[0,0,'free']},
+  fqhc:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[20,80,'slide'],hmo:[20,80,'slide'],ppo:[20,80,'slide'],market:[20,80,'slide'],medicaid:[20,80,'slide'],tricare:[20,80,'slide'],va:[20,80,'slide'],ship:[20,80,'slide'],self:[20,80,'slide']},
+  er:{bcbs:[150,1500,'in'],national:[150,1500,'in'],kaiser:[100,1500,'away'],hmo:[100,1500,'away'],ppo:[150,1500,'away'],market:[100,1500,'emer'],medicaid:[0,500,'emer'],tricare:[0,150,'in'],va:[0,1500,'unk'],ship:[100,1500,'emer'],self:[500,3000,'self']}
 };
 const COV = {in:['In-network','ok'], away:['Covered away from home','ok'], own:['Through your plan\'s own telehealth','ok'], free:['Free','ok'], emer:['Emergencies covered','ok'], oon:['Out-of-network rate','b'],
   slide:['Sliding scale','b'], self:['Self-pay price','b'], no:['Likely not covered here','x'], unk:['Confirm with your plan','']};
@@ -493,7 +511,7 @@ function rank(level, plan, modes, city){
 }
 
 // ---------- State ----------
-const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], result:null};
+const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], help:'vet', result:null};
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app = document.getElementById('app');
 
@@ -546,6 +564,11 @@ function home(){
       <p class="lead">A parent's plan still covers you in most cities, but it covers different things there. Pick your plan to see what it usually pays for away from home.</p>
       <a class="btn" href="#find-care">See my coverage</a></div>
     <div class="chips">${Object.entries(PLANS).map(([k, p]) => `<button data-act="plan-go" data-k="${k}">${p[0]}</button>`).join('')}</div>
+  </div></section>
+  <section class="blk"><div class="in">
+    <h2>Help for veterans and people without housing</h2>
+    <p class="lead" style="margin-top:16px">Free lines to call, programs that can help, and how to get care with no insurance or fixed address.</p>
+    <div class="helpcards">${Object.entries(HELP).map(([k, v]) => `<button class="card" data-act="help-go" data-k="${k}"><b>${v.tab}</b><small>${v.res[0][0]}${k === 'home' ? ', health centers and free care' : k === 'vet' ? ', VA coverage and clinics' : ', housing programs and documents'}</small><span class="go">See help</span></button>`).join('')}</div>
   </div></section>`;
 }
 function prog(){ return `<div class="prog">${[0,1,2,3].map(i => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}<span class="eyebrow">Step ${S.step + 1} of 4</span></div>`; }
@@ -615,7 +638,7 @@ function resultView(){
   let h = `<div class="in narrow page" style="padding-block:44px 64px"><span class="eyebrow">Based on what you described</span>
     <div class="banner l${L}"><h1>${r.call === '911' ? 'Call 911 now' : TITLES[L]}</h1><p>${r.call === '911' ? 'These signs need an ambulance, not an app. Don\'t drive yourself.' : SUBS[L]}</p>
       <ul>${r.reasons.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
-  if (r.call === '988' || r.topic === 'mental') h += `<div class="card box"><h2 style="font-size:22px">You can call or text 988 any time</h2><p class="small" style="margin-top:6px">The 988 Suicide &amp; Crisis Lifeline is free and confidential, 24 hours a day. If you are in immediate danger, call 911.</p></div>`;
+  if (r.call === '988' || r.topic === 'mental') h += `<div class="card box"><h2 style="font-size:22px">You can call or text 988 any time</h2><p class="small" style="margin-top:6px">The 988 Suicide &amp; Crisis Lifeline is free and confidential, 24 hours a day. Veterans can dial 988 and press 1 for the Veterans Crisis Line. If you are in immediate danger, call 911.</p></div>`;
   h += `<h2 style="font-size:28px;margin-top:36px">What to do now</h2><ul class="list">${(r.call === '911' ? ['Call 911 now and say what is happening.','Stay where you are and unlock the door if you can.','If poisoning is possible, Poison Control is 1-800-222-1222.'] : TODO[L]).map(x => `<li>${x}</li>`).join('')}</ul>`;
   if (L < 4) h += `<div class="card box"><h2 style="font-size:22px">Go up a level if…</h2><p class="small">Trust your gut. If any of these appear, stop waiting and get seen.</p>
     <ul class="list up">${t.qs.filter(q => q[1] > L).slice(0, 3).map(q => `<li>${q[0]}</li>`).concat('<li>It is getting worse quickly, or any emergency sign from the first step appears</li>').join('')}</ul></div>`;
@@ -738,7 +761,7 @@ function findView(){
           ${o.cov === 'no' ? ' Your plan likely won\'t pay here, so the self-pay price is shown.' : ''}${o.help ? ' <b>Financial help:</b> ' + o.help : ''}${o.mi ? ' The button searches Maps for a real ' + MAPQ[o.type] + ' nearby, since this place is a sample.' : ''}</p></details></div></article>`;
   });
   h += `</div><div class="side">${mapCard(opts, c)}
-    <div class="card box" style="margin-top:0"><h2 style="font-size:22px">If cost is the problem</h2><ul class="list"><li>Nonprofit hospitals must have a financial assistance policy. Ask before you're billed.</li><li>Federally funded health centers set fees on a sliding scale based on income.</li><li>Paying cash? You can ask for a good faith estimate before non-emergency care.</li></ul>
+    <div class="card box" style="margin-top:0"><h2 style="font-size:22px">If cost is the problem</h2><p class="small" style="margin-top:6px">Veteran, or without a fixed address? <a href="#help">See veterans and housing help</a>.</p><ul class="list"><li>Nonprofit hospitals must have a financial assistance policy. Ask before you're billed.</li><li>Federally funded health centers set fees on a sliding scale based on income.</li><li>Paying cash? You can ask for a good faith estimate before non-emergency care.</li></ul>
       <p style="margin-top:14px"><a href="https://www.cms.gov/nosurprises" target="_blank" rel="noopener">Your rights (CMS)</a> · <a href="https://findahealthcenter.hrsa.gov/" target="_blank" rel="noopener">Find a health center (HRSA)</a></p></div>
     <p class="small">Places, prices, waits and travel times here are made-up sample records to show how CareAway works. Don't rely on them for a real decision yet.</p></div></div>
     <h2 style="font-size:34px;margin-top:52px">Side by side</h2><p class="lead" style="font-size:16px">The same options compared on level of care, estimated cost, typical wait and travel time.</p>
@@ -771,7 +794,54 @@ function howView(){
 }
 
 // ---------- Router and events ----------
-const VIEWS = {home, triage: triageView, 'find-care': findView, 'how-it-works': howView};
+// ---------- Extra help: veterans, veterans without housing, anyone without housing ----------
+// Numbers checked against va.gov, veteranscrisisline.net and 211.org on 2026-11-20.
+const tel = (n, label) => `<a href="tel:${n.replace(/[^0-9]/g, '')}">${label || n}</a>`;
+const ext = (u, label) => `<a href="${u}" target="_blank" rel="noopener">${label}</a>`;
+const HELP = {
+  vet:{tab:'Veterans', h:'Health care help for veterans',
+    lead:'You can use VA care in any city, and VA can cover some care outside its own clinics. You don\'t need to be enrolled to call the crisis line.',
+    res:[
+      ['Veterans Crisis Line', 'Free and confidential, any time. For veterans, service members and the people who support them.', `Dial ${tel('988', '988')} then press 1<br>Text ${tel('838255')}<br>${ext('https://www.veteranscrisisline.net/get-help-now/chat/', 'Chat online')}`],
+      ['VA health benefits line', 'Questions about signing up for VA health care and what it covers.', `${tel('877-222-8387', '877-222-8387')}`],
+      ['Find a VA clinic or hospital', 'VA medical centers, clinics and Vet Centers near where you are.', ext('https://www.va.gov/find-locations/', 'VA facility locator')]],
+    tips:['In an emergency, go to the nearest emergency room, VA or not.', 'Before non-emergency care outside VA, call VA first to ask if it will be covered.', 'After a non-VA emergency room visit, tell VA as soon as you can.']},
+  vethome:{tab:'Veterans without housing', h:'Help for veterans without housing',
+    lead:'VA runs programs for housing, health care and getting documents back. One call can start all of them, and family or a caseworker can call for you.',
+    res:[
+      ['National Call Center for Homeless Veterans', 'Answered 24 hours a day by VA staff. Veterans, family, friends and service providers can all call.', tel('877-424-3838', '877-424-3838')],
+      ['VA homeless help', 'Help getting an ID or other documents, and signing up for health, mental health and substance-use care.', ext('https://www.va.gov/resources/homeless-help/', 'va.gov homeless help')],
+      ['Veterans Crisis Line', 'Free and confidential, any time.', `Dial ${tel('988', '988')} then press 1<br>Text ${tel('838255')}`]],
+    progs:[['HUD-VASH', 'Long-term housing with a housing voucher and a VA caseworker'], ['SSVF', 'Help to keep your housing, or to get back into housing fast'], ['Grant and Per Diem', 'Short-term housing with support while you get settled'],
+      ['Health Care for Homeless Veterans', 'VA outreach workers who come to you and connect you to care'], ['Stand Downs', 'One- to three-day events with care, benefits and supplies in one place']],
+    tips:['Ask for the Health Care for Homeless Veterans team at any VA medical center.', 'You can still be seen if you have lost your ID or papers. VA can help replace them.']},
+  home:{tab:'Anyone without housing', h:'Health care without a fixed address',
+    lead:'You can get care without an address, insurance or money up front. These are the places to start, in any city.',
+    res:[
+      ['211', 'Free, confidential help finding shelter, food, health care and other local services.', `Call ${tel('211', '211')}<br>${ext('https://www.211.org/', '211.org')}`],
+      ['Community health centers', 'Federally funded health centers see people whether or not they can pay, with fees based on income. Many run clinics just for people without housing.', ext('https://findahealthcenter.hrsa.gov/', 'Find a health center (HRSA)')],
+      ['988 Suicide and Crisis Lifeline', 'Call or text any time if you are in crisis or worried about someone.', `Call or text ${tel('988', '988')}`]],
+    tips:['Hospital emergency rooms must check and treat anyone with an emergency, even without insurance or money.', 'Nonprofit hospitals have financial assistance. Ask the billing office for the form before you pay.', 'No fixed address? Ask a shelter or outreach worker if you can use their address for mail and paperwork.', 'CareAway never asks for your address, and nothing you enter is saved.']}
+};
+function helpView(){
+  const g = HELP[S.help] || HELP.vet;
+  return `<div class="in page help" style="padding-block:44px 64px">
+    <p class="eyebrow">Veterans &amp; housing</p><h1>Help for veterans and people without housing</h1>
+    <p class="lead">Free lines to call, programs that can help, and how to get care with no insurance or fixed address.</p>
+    <div class="crisis"><b>In crisis right now?</b><span>Veterans: dial ${tel('988', '988')} then press 1.</span><span>Anyone: call or text ${tel('988', '988')}.</span><span>Emergency: call ${tel('911', '911')}.</span></div>
+    <div class="frow" role="group" aria-label="Choose who this is for" style="margin-top:28px">${Object.entries(HELP).map(([k, v]) => `<button class="chip" data-act="set" data-k="help" data-v="${k}" aria-pressed="${(S.help || 'vet') === k}">${v.tab}</button>`).join('')}</div>
+    <h2 class="hh">${g.h}</h2><p class="lead" style="margin-top:10px">${g.lead}</p>
+    <div class="res">${g.res.map(r => `<div><div><h3>${r[0]}</h3><p>${r[1]}</p></div><p class="how">${r[2]}</p></div>`).join('')}</div>
+    ${g.progs ? `<h3 class="sub">VA programs for veterans without housing</h3><div class="grid2">${g.progs.map(p => `<div class="card"><b>${p[0]}</b><small>${p[1]}</small></div>`).join('')}</div>` : ''}
+    <h3 class="sub">Good to know</h3><ul class="list">${g.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+    <div class="card box cta2"><div><h2 style="font-size:22px">${S.help === 'vet' || !S.help ? 'See VA coverage on the map' : 'Find free and low-cost care nearby'}</h2>
+      <p class="small">${S.help === 'vet' || !S.help ? 'Sets your plan to VA health care and shows care near you.' : 'Shows free clinics and health centers that charge by income.'}</p></div>
+      ${S.help === 'vet' || !S.help ? '<button class="btn pri" data-act="plan-go" data-k="va">Use VA health care</button>' : '<button class="btn pri" data-act="lowcost">Show free care</button>'}</div>
+    <p class="small" style="margin-top:28px">Phone numbers and programs come from va.gov, veteranscrisisline.net and 211.org, checked November 2026. Rules change, so confirm with the program.</p>
+  </div>`;
+}
+
+const VIEWS = {home, triage: triageView, 'find-care': findView, help: helpView, 'how-it-works': howView};
 function route(){ const r = location.hash.slice(1); return VIEWS[r] ? r : 'home'; }
 function render(top){
   const r = route();
@@ -835,6 +905,8 @@ document.addEventListener('click', e => {
   else if (a === 'demo'){ const lad = document.getElementById('ladder'); lad.style.setProperty('--i', k);
     lad.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', i === +k));
     document.querySelectorAll('[data-act="demo"]').forEach(b => b.setAttribute('aria-pressed', b === el)); }
+  else if (a === 'help-go'){ S.help = k; if (location.hash === '#help') render(true); else location.hash = '#help'; }
+  else if (a === 'lowcost'){ S.mapType = 'low'; location.hash = '#find-care'; }
   else if (a === 'restart'){ clearPhotos(); Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
 });
 document.addEventListener('keydown', e => {
