@@ -13,6 +13,7 @@ A web app prototype that helps you find the right level of care when you're away
 - **Add a photo.** Take or choose a photo of a rash, burn, cut or swelling to show a clinician later. Photos stay on your device and are not analyzed.
 - **Coverage by plan type.** Pick your plan type, or type your plan's name, to see what it usually covers away from home. No member ID or insurance login.
 - **Find care.** Compare nearby options by fit, estimated cost, typical wait and travel time by car, walking or transit, on a real street map you can drag and zoom. The pins are sample places.
+- **Veterans and housing help.** Crisis lines, VA programs, and how to get care without insurance or a fixed address.
 - **Help with cost.** Free clinics, sliding-scale health centers and hospital financial assistance are shown alongside everything else.
 
 ## Cities
