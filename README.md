@@ -22,7 +22,7 @@ Chicago, San Francisco Bay Area, New York City, Los Angeles, Washington DC, Seat
 
 ## Tools used
 
-- HTML, CSS and JavaScript in a single file (`index.html`)
+- HTML, CSS and JavaScript in `index.html`, with the triage rules in `triage.js`
 - Leaflet with OpenStreetMap for the map
 - Rules-based triage (no AI in this version)
 - GitHub Pages for hosting
@@ -31,6 +31,12 @@ Chicago, San Francisco Bay Area, New York City, Los Angeles, Washington DC, Seat
 
 1. Clone this repo
 2. Open `index.html` in a web browser
+
+## Testing the triage rules
+
+The red-flag (911 and 988) rules have tests in `tests/triage.test.js`, written as plain lists of phrases so a clinician can review them. With Node 18 or newer, run `npm test`. Nothing needs to be installed.
+
+Cases marked "known gap" are wording the rules likely get wrong today. They are reported as todo and do not fail the run.
 
 ## Important
 

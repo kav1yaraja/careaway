@@ -1,0 +1,8 @@
+{
+  "name": "careaway",
+  "private": true,
+  "description": "CareAway prototype. No build; open index.html.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
