@@ -249,9 +249,12 @@ svg text{font-family:var(--body)}
 .helpcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:32px}
 .helpcards .card{font:inherit;text-align:left;color:var(--ink);padding:22px;cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:transform .18s var(--ease),border-color .18s var(--ease)}
 .helpcards b{font:600 20px/1.25 var(--display)} .helpcards small{color:var(--muted);font-size:15px;flex:1}
+.helpcards.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+ol.steps{counter-reset:s} ol.steps li{counter-increment:s;padding-left:38px;position:relative} ol.steps li::before{content:counter(s);position:absolute;left:0;top:12px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:600;display:grid;place-items:center}
+input[type=date]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-sm);padding:9px 12px}
 .helpcards .go{color:var(--accent);font-weight:500;margin-top:10px}
 @media (hover:hover) and (pointer:fine){ .helpcards .card:hover{transform:translateY(-2px);border-color:var(--line-2)} }
-@media (max-width:900px){ .helpcards,.res>div{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:900px){ .helpcards,.helpcards.two,.res>div{grid-template-columns:minmax(0,1fr)} }
 
 /* hover layer: fine pointers only */
 @media (hover:hover) and (pointer:fine){
@@ -300,14 +303,14 @@ html.enter:not(.entered) .hero .ex{animation:settle .9s var(--ease-enter) both}
 
 <header class="top"><div class="in">
   <a class="logo" href="#home" aria-label="CareAway home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#14614b"/><path d="M12 6.5v11M6.5 12h11" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>CareAway</a>
-  <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a><a href="#help">Veterans &amp; housing</a></nav>
+  <nav id="nav"><a href="#triage">Start triage</a><a href="#find-care">Find care</a><a href="#how-it-works">How it works</a><a href="#help">Veterans &amp; housing</a><a href="#work">Work &amp; jobs</a></nav>
   <span class="sos">Emergency: call 911</span>
 </div></header>
 <main id="app"></main>
 <footer><div class="in">
   <div class="cols">
     <div><h4>CareAway</h4><p style="max-width:44ch;font-size:16px">Where to get care, whether your plan covers it, and what it will cost. Made for young adults living in a city that isn't home.</p></div>
-    <div><p class="eyebrow">Product</p><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#help">Help for veterans and people without housing</a><a href="#how-it-works">How it works and sources</a></div>
+    <div><p class="eyebrow">Product</p><a href="#triage">Start triage</a><a href="#find-care">Find care near me</a><a href="#help">Help for veterans and people without housing</a><a href="#work">Hurt at work or between jobs</a><a href="#how-it-works">How it works and sources</a></div>
     <div><p class="eyebrow">Emergency</p><span style="color:var(--bad)">Call 911</span><span>988 Suicide &amp; Crisis Lifeline</span><span>Veterans Crisis Line, 988 then press 1</span><span>Poison Control, 1-800-222-1222</span></div>
   </div>
   <p>CareAway gives general guidance about the level of care to seek. It is not medical advice, does not diagnose, and does not replace a clinician.</p>
@@ -411,6 +414,7 @@ const PLANS = {
   medicaid:['Medicaid or CHIP from another state','Medicaid generally covers only emergencies outside the state that issued it.','https://www.medicaid.gov/','Medicaid.gov'],
   va:['VA health care (veteran)','VA covers care at VA clinics in any city. Community urgent care and non-VA emergency rooms can be covered too: call VA first when you can, and tell VA soon after an emergency visit.','https://www.va.gov/health-care/','VA health care'],
   tricare:['TRICARE (military family)','TRICARE works nationwide. Rules depend on whether you have Prime or Select; Prime may need a referral for non-urgent care.','https://www.tricare.mil/','TRICARE'],
+  wc:['Workers\' comp (hurt at work)','Workers\' comp usually pays for care after a work injury, with no copay. Outside an emergency, ask your employer which doctor to see first.','https://www.dol.gov/agencies/owcp/wc','State workers\' comp agencies (DOL)'],
   ship:['A school or student health plan','Your campus health center is usually the cheapest first stop. Off-campus coverage depends on the plan\'s network.'],
   self:['Uninsured or paying cash','You\'ll pay a cash price. Ask for a good faith estimate before non-emergency care.','https://www.cms.gov/nosurprises','CMS · No Surprises Act'],
   unsure:['I\'m not sure','We show the widest range and what to ask your plan.'],
@@ -418,6 +422,7 @@ const PLANS = {
 };
 // Write-in plan names → closest plan type. First match wins.
 const PLAN_MATCH = [
+  ['wc', /workers'? ?comp|work ?comp|workman|\bwc\b/],
   ['kaiser', /kaiser|\bkp\b/],
   ['bcbs', /blue ?cross|blue ?shield|\bbcbs\b|anthem|carefirst|highmark|premera|regence|horizon|florida blue|wellmark|excellus/],
   ['medicaid', /medicaid|medi-?cal|\bchip\b|masshealth|badgercare|apple health|soonercare|tenncare/],
@@ -440,6 +445,7 @@ function planLabel(){
 function planNote(){
   const t = S.planText.trim(); if (!t) return 'Type the plan name from your insurance card. No member ID needed.';
   const k = matchPlan(t);
+  if (!k && /cobra/i.test(t)) return 'COBRA keeps the plan you had at work. Type that plan\'s name instead, like Aetna or Blue Cross.';
   return k ? 'Closest match: <b>' + PLANS[k][0] + '</b>. ' + PLANS[k][1] : 'We don\'t recognize that plan yet, so we\'ll show the widest cost range. Call the number on your card to confirm coverage.';
 }
 function planInput(){ return S.plan !== 'other' ? '' : `<div class="planw"><label for="planText" class="small">What's your plan called?</label><input type="text" id="planText" maxlength="60" autocomplete="off" placeholder="e.g. Anthem, Oscar, Medi-Cal" value="${esc(S.planText)}"><p class="small" id="planNote">${planNote()}</p></div>`; }
@@ -480,21 +486,22 @@ function placesFor(city){
   ].map((p, i) => ({...p, id:'p' + i, ...(p.mi ? latLng(city, p) : {})}));
 }
 const COST = {
-  tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],va:[0,15,'own'],ship:[0,40,'own'],self:[40,90,'self']},
-  retail:{bcbs:[20,75,'in'],national:[20,75,'in'],kaiser:[0,75,'away'],hmo:[30,100,'away'],ppo:[40,160,'oon'],market:[100,160,'no'],medicaid:[100,160,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[20,160,'unk'],self:[100,160,'self']},
-  pcp:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[120,250,'no'],hmo:[120,250,'no'],ppo:[50,250,'oon'],market:[120,250,'no'],medicaid:[120,250,'no'],tricare:[0,60,'unk'],va:[0,50,'unk'],ship:[20,250,'unk'],self:[120,250,'self']},
-  uc:{bcbs:[30,100,'in'],national:[30,100,'in'],kaiser:[50,150,'away'],hmo:[50,150,'away'],ppo:[60,300,'oon'],market:[50,300,'unk'],medicaid:[150,300,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[30,300,'unk'],self:[150,300,'self']},
-  free:{bcbs:[0,0,'free'],national:[0,0,'free'],kaiser:[0,0,'free'],hmo:[0,0,'free'],ppo:[0,0,'free'],market:[0,0,'free'],medicaid:[0,0,'free'],tricare:[0,0,'free'],va:[0,0,'free'],ship:[0,0,'free'],self:[0,0,'free']},
-  fqhc:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[20,80,'slide'],hmo:[20,80,'slide'],ppo:[20,80,'slide'],market:[20,80,'slide'],medicaid:[20,80,'slide'],tricare:[20,80,'slide'],va:[20,80,'slide'],ship:[20,80,'slide'],self:[20,80,'slide']},
-  er:{bcbs:[150,1500,'in'],national:[150,1500,'in'],kaiser:[100,1500,'away'],hmo:[100,1500,'away'],ppo:[150,1500,'away'],market:[100,1500,'emer'],medicaid:[0,500,'emer'],tricare:[0,150,'in'],va:[0,1500,'unk'],ship:[100,1500,'emer'],self:[500,3000,'self']}
+  tele:{bcbs:[0,50,'in'],national:[0,50,'in'],kaiser:[0,30,'own'],hmo:[0,50,'own'],ppo:[0,50,'own'],market:[0,50,'own'],medicaid:[0,90,'unk'],tricare:[0,40,'in'],va:[0,15,'own'],ship:[0,40,'own'],self:[40,90,'self'],wc:[0,0,'wc']},
+  retail:{bcbs:[20,75,'in'],national:[20,75,'in'],kaiser:[0,75,'away'],hmo:[30,100,'away'],ppo:[40,160,'oon'],market:[100,160,'no'],medicaid:[100,160,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[20,160,'unk'],self:[100,160,'self'],wc:[0,0,'wc']},
+  pcp:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[120,250,'no'],hmo:[120,250,'no'],ppo:[50,250,'oon'],market:[120,250,'no'],medicaid:[120,250,'no'],tricare:[0,60,'unk'],va:[0,50,'unk'],ship:[20,250,'unk'],self:[120,250,'self'],wc:[0,0,'wc']},
+  uc:{bcbs:[30,100,'in'],national:[30,100,'in'],kaiser:[50,150,'away'],hmo:[50,150,'away'],ppo:[60,300,'oon'],market:[50,300,'unk'],medicaid:[150,300,'no'],tricare:[0,60,'in'],va:[0,50,'unk'],ship:[30,300,'unk'],self:[150,300,'self'],wc:[0,0,'wc']},
+  free:{bcbs:[0,0,'free'],national:[0,0,'free'],kaiser:[0,0,'free'],hmo:[0,0,'free'],ppo:[0,0,'free'],market:[0,0,'free'],medicaid:[0,0,'free'],tricare:[0,0,'free'],va:[0,0,'free'],ship:[0,0,'free'],self:[0,0,'free'],wc:[0,0,'free']},
+  fqhc:{bcbs:[20,50,'in'],national:[20,50,'in'],kaiser:[20,80,'slide'],hmo:[20,80,'slide'],ppo:[20,80,'slide'],market:[20,80,'slide'],medicaid:[20,80,'slide'],tricare:[20,80,'slide'],va:[20,80,'slide'],ship:[20,80,'slide'],self:[20,80,'slide'],wc:[0,0,'wc']},
+  er:{bcbs:[150,1500,'in'],national:[150,1500,'in'],kaiser:[100,1500,'away'],hmo:[100,1500,'away'],ppo:[150,1500,'away'],market:[100,1500,'emer'],medicaid:[0,500,'emer'],tricare:[0,150,'in'],va:[0,1500,'unk'],ship:[100,1500,'emer'],self:[500,3000,'self'],wc:[0,0,'wcer']}
 };
 const COV = {in:['In-network','ok'], away:['Covered away from home','ok'], own:['Through your plan\'s own telehealth','ok'], free:['Free','ok'], emer:['Emergencies covered','ok'], oon:['Out-of-network rate','b'],
-  slide:['Sliding scale','b'], self:['Self-pay price','b'], no:['Likely not covered here','x'], unk:['Confirm with your plan','']};
+  slide:['Sliding scale','b'], self:['Self-pay price','b'], no:['Likely not covered here','x'], unk:['Confirm with your plan',''],
+  wc:['Workers\' comp, if your employer OKs this place',''], wcer:['Workers\' comp pays emergencies','ok']};
 const MAPQ = {retail:'retail clinic', pcp:'primary care doctor', uc:'urgent care', free:'free clinic', er:'emergency room', fqhc:'community health center'};
 const MODE = {car:['Car', mi => 3 + mi*4, 'driving'], walk:['Walking', mi => mi*20, 'walking'], transit:['Public transit', mi => 6 + mi*7, 'transit']};
 function costFor(type, plan){
   if (plan !== 'unsure') return COST[type][plan];
-  const v = Object.values(COST[type]);
+  const v = Object.entries(COST[type]).filter(e => e[0] !== 'wc').map(e => e[1]);
   return [Math.min(...v.map(c => c[0])), Math.max(...v.map(c => c[1])), type === 'free' ? 'free' : type === 'fqhc' ? 'slide' : 'unk'];
 }
 const money = (lo, hi, plus) => lo === hi ? '$' + lo : '$' + lo.toLocaleString() + '–$' + hi.toLocaleString() + (plus ? '+' : '');
@@ -511,7 +518,7 @@ function rank(level, plan, modes, city){
 }
 
 // ---------- State ----------
-const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], help:'vet', result:null};
+const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], help:'vet', work:'hurt', wq:[], lastday:'', result:null};
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app = document.getElementById('app');
 
@@ -569,6 +576,13 @@ function home(){
     <h2>Help for veterans and people without housing</h2>
     <p class="lead" style="margin-top:16px">Free lines to call, programs that can help, and how to get care with no insurance or fixed address.</p>
     <div class="helpcards">${Object.entries(HELP).map(([k, v]) => `<button class="card" data-act="help-go" data-k="${k}"><b>${v.tab}</b><small>${v.res[0][0]}${k === 'home' ? ', health centers and free care' : k === 'vet' ? ', VA coverage and clinics' : ', housing programs and documents'}</small><span class="go">See help</span></button>`).join('')}</div>
+  </div></section>
+  <section class="blk alt"><div class="in">
+    <h2>Hurt at work, or between jobs</h2>
+    <p class="lead" style="margin-top:16px">Who pays after an injury on the job, and how to keep coverage when work insurance ends.</p>
+    <div class="helpcards two">
+      <button class="card" data-act="work-go" data-k="hurt"><b>Hurt at work</b><small>What to do first, telling your employer, and how workers' comp pays</small><span class="go">See steps</span></button>
+      <button class="card" data-act="work-go" data-k="lost"><b>Lost your job or coverage</b><small>COBRA, the marketplace, Medicaid or a parent's plan, with your deadlines</small><span class="go">Compare options</span></button></div>
   </div></section>`;
 }
 function prog(){ return `<div class="prog">${[0,1,2,3].map(i => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}<span class="eyebrow">Step ${S.step + 1} of 4</span></div>`; }
@@ -643,6 +657,8 @@ function resultView(){
   if (L < 4) h += `<div class="card box"><h2 style="font-size:22px">Go up a level if…</h2><p class="small">Trust your gut. If any of these appear, stop waiting and get seen.</p>
     <ul class="list up">${t.qs.filter(q => q[1] > L).slice(0, 3).map(q => `<li>${q[0]}</li>`).concat('<li>It is getting worse quickly, or any emergency sign from the first step appears</li>').join('')}</ul></div>`;
   if (r.call !== '911') h += `<div class="card box cta2"><div><h2 style="font-size:22px">Find ${LEVELS[L].toLowerCase()} near you</h2><p class="small">Costs shown for: ${planLabel()}. Ranked by level of care, coverage, cost and travel.</p></div><a class="btn pri" href="#find-care">See options →</a></div>`;
+  if (r.call !== '911' && (WORKRE.test(S.text.toLowerCase()) || ['burn', 'cut', 'sprain'].includes(r.topic))) h += `<div class="card box cta2"><div><h2 style="font-size:22px">${WORKRE.test(S.text.toLowerCase()) ? 'Hurt at work?' : 'Did this happen at work?'}</h2>
+    <p class="small">Workers' comp usually pays for care after a work injury, and there is a deadline to tell your employer, so do it soon. Tell the clinic it happened at work.</p></div><button class="btn" data-act="work-go" data-k="hurt">What to do</button></div>`;
   if (S.photos.length && r.call !== '911') h += `<div class="card box"><h2 style="font-size:22px">Your photo${S.photos.length > 1 ? 's' : ''}</h2>
     <p class="small" style="margin-top:6px">Show ${S.photos.length > 1 ? 'these' : 'this'} to the clinician or on a telehealth visit. Rashes, burns and swelling change, so a photo of how it looked earlier helps. CareAway did not use ${S.photos.length > 1 ? 'them' : 'it'} to decide your level of care.</p>
     ${thumbs(false)}<p class="small">Only on this device. ${S.photos.length > 1 ? 'They disappear' : 'It disappears'} when you close or refresh this page, so keep your own copy.</p></div>`;
@@ -841,7 +857,99 @@ function helpView(){
   </div>`;
 }
 
-const VIEWS = {home, triage: triageView, 'find-care': findView, help: helpView, 'how-it-works': howView};
+// ---------- Work: hurt on the job, or losing coverage between jobs ----------
+// Summarized from dol.gov (COBRA, workers' comp) and healthcare.gov, November 2026. Workers' comp rules differ by state.
+const WORKRE = /\b(at|from|during|after) work\b|on the job|at my job|workplace|job ?site|at the (warehouse|restaurant|kitchen|site|plant|factory|store)|work (injury|accident)|workers'? ?comp/;
+const WORK = {
+  hurt:{tab:'Hurt at work', h:'If you were hurt or got sick because of work',
+    lead:'Workers\' compensation usually pays for care after an injury or illness caused by your job, with no copay or deductible, and can replace part of your pay while you can\'t work. Each state runs its own system, so the steps are similar but the deadlines are not.',
+    steps:[
+      ['Get care first', 'In an emergency, call 911 or go to the nearest emergency room. Tell them it happened at work.'],
+      ['Tell your employer, in writing, as soon as you can', 'Say what happened, when and where. Every state has a deadline for this, and some are 30 days or less. Keep a copy or a photo of what you sent.'],
+      ['Ask who you should see for follow-up care', 'In some states your employer or its insurer chooses the first doctor, or gives you a list. Ask before a non-emergency visit so the bill is covered.'],
+      ['Tell every clinic it\'s a work injury', 'Give your employer\'s name and your claim number if you have one. Workers\' comp should be billed, not your health plan.'],
+      ['Keep a simple record', 'Dates, who you spoke to, visit notes, receipts and miles driven to appointments. A photo on your phone is enough.']],
+    res:[
+      ['Your state workers\' comp agency', 'Every state has one. Call it if your employer won\'t file a claim, your claim is denied, or you don\'t know your deadline.', ext('https://www.dol.gov/agencies/owcp/wc', 'State agencies (U.S. Department of Labor)')],
+      ['Federal employees', 'Federal workers are covered by a separate federal program, not the state one.', ext('https://www.dol.gov/agencies/owcp/FECA', 'Federal Employees\' Compensation (DOL)')],
+      ['Unsafe conditions at work', 'Report a hazard that hurt you or could hurt someone else. You can ask OSHA to keep your name private.', `Call ${tel('800-321-6742', '1-800-321-6742')}<br>${ext('https://www.osha.gov/workers/file-complaint', 'File a complaint with OSHA')}`]],
+    tips:['In most states it is illegal to fire or punish you for reporting an injury or filing a claim.', 'If your claim is delayed or denied, your health plan can usually pay in the meantime. Tell both sides about each other.', 'Independent contractors and many gig workers are often not covered by workers\' comp. Your health plan or a free clinic is the backup.', 'Wage replacement, when it applies, is usually part of your pay, not all of it, and often starts after a short waiting period.']},
+  lost:{tab:'Lost your job or coverage', h:'Keeping health coverage between jobs',
+    lead:'When work coverage ends you usually have 60 days to pick something new, and you have more than one choice. Compare at least two before you decide.'}
+};
+const WQ = [
+  ['You\'re in the middle of treatment, pregnant, or have surgery planned', 'cobra', 'COBRA keeps the same plan and the same doctors while you\'re mid-treatment'],
+  ['You\'ve already paid most of this year\'s deductible', 'cobra', 'COBRA keeps what you\'ve already paid toward this year\'s deductible'],
+  ['Your income this year will be a lot lower than before', 'market', 'Marketplace savings are based on your income for the year, so a lower income can mean a much lower premium'],
+  ['You\'ve moved, or live away from the area your work plan covered', 'market', 'A marketplace plan in the state you live in has doctors near you'],
+  ['You have little or no income coming in right now', 'medicaid', 'Medicaid looks at your income now, and you can apply in any month'],
+  ['You\'re under 26 and a parent has a plan through work', 'parent', 'Losing your coverage lets a parent add you outside their usual sign-up time'],
+  ['You\'re married and your spouse has a plan through work', 'spouse', 'Losing your coverage lets your spouse add you outside their usual sign-up time']
+];
+const WOPT = {
+  market:['A marketplace plan', 'Losing work coverage lets you sign up within 60 days. Prices depend on your expected income for the year and where you live.', ext('https://www.healthcare.gov/have-job-based-coverage/if-you-lose-job-based-coverage/', 'HealthCare.gov · Losing job-based coverage')],
+  cobra:['Keep your work plan with COBRA', 'Same plan, same doctors. You usually pay the full premium plus up to 2%, which is often far more than you paid while working. It usually lasts up to 18 months. Employers with 20 or more workers must offer it, and many states have a similar rule for smaller ones.', ext('https://www.dol.gov/agencies/ebsa/about-ebsa/our-activities/resource-center/publications/workers-guide-health-benefits-cobra', 'U.S. Department of Labor · COBRA guide')],
+  medicaid:['Medicaid', 'Free or very low cost if your income is low. You can apply any time of year. Who qualifies depends on your state.', ext('https://www.healthcare.gov/medicaid-chip/', 'HealthCare.gov · Medicaid and CHIP')],
+  parent:['Join a parent\'s plan', 'You can be on a parent\'s plan until you turn 26. They usually have 30 days from your coverage ending to add you, so ask their HR soon.', ext('https://www.healthcare.gov/young-adults/children-under-26/', 'HealthCare.gov · Coverage under 26')],
+  spouse:['Join your spouse\'s plan', 'Your spouse usually has 30 days from your coverage ending to add you. Ask their HR for the form.', '']
+};
+const fmtDate = d => d.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'});
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+// HealthCare.gov open enrollment runs Nov 1 to Jan 15. Some state marketplaces run longer.
+function openEnrollment(now){
+  const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear(), start = new Date(y, 10, 1), end = new Date(y + 1, 0, 15);
+  return now >= start && now < addDays(end, 1) ? {open:true, end} : {open:false, start: now < start ? start : new Date(y + 1, 10, 1)};
+}
+function workPicks(){
+  const score = {market:0, cobra:0, medicaid:0, parent:0, spouse:0}, why = {market:[], cobra:[], medicaid:[], parent:[], spouse:[]};
+  S.wq.forEach(i => { const q = WQ[i]; score[q[1]]++; why[q[1]].push(q[2]); });
+  // Free or cheap options first when they apply; otherwise the marketplace, since COBRA can be chosen later and backdated.
+  const order = ['medicaid', 'parent', 'spouse', 'market', 'cobra'];
+  return Object.keys(score).filter(k => score[k] || k === 'market' || k === 'cobra')
+    .sort((a, b) => score[b] - score[a] || order.indexOf(a) - order.indexOf(b)).map(k => ({k, why: why[k]}));
+}
+function workDates(){
+  if (!S.lastday) return '<p class="small" style="margin-top:10px">Add the date to see your deadlines. Nothing you enter is saved.</p>';
+  const d = new Date(S.lastday + 'T12:00:00'); if (isNaN(d)) return '';
+  return `<ul class="list" style="margin-top:14px">
+    <li><b>Marketplace:</b> sign up by <b>${fmtDate(addDays(d, 60))}</b>. You can also sign up up to 60 days before, and if you pick a plan before ${fmtDate(d)} it can start right after, with no gap.</li>
+    <li><b>COBRA:</b> you have at least until <b>${fmtDate(addDays(d, 60))}</b> to say yes. The 60 days start from this date or the day your COBRA notice arrives, whichever is later. If you say yes in time, it covers you back to ${fmtDate(addDays(d, 1))}, as long as you pay the premiums back to then. The first payment is due within 45 days of saying yes.</li>
+    <li><b>A parent's or spouse's plan:</b> they usually need to add you by about <b>${fmtDate(addDays(d, 30))}</b>.</li></ul>`;
+}
+function workView(){
+  const k = WORK[S.work] ? S.work : 'hurt', g = WORK[k];
+  let h = `<div class="in page help" style="padding-block:44px 64px">
+    <p class="eyebrow">Work &amp; jobs</p><h1>Hurt at work, or between jobs</h1>
+    <p class="lead">What to do first after an injury at work, who pays for it, and how to keep health coverage when a job ends.</p>
+    <div class="crisis"><b>Badly hurt right now?</b><span>Call ${tel('911', '911')} or go to the nearest emergency room. Workers' comp can be sorted out after.</span></div>
+    <div class="frow" role="group" aria-label="Choose what happened" style="margin-top:28px">${Object.entries(WORK).map(([w, v]) => `<button class="chip" data-act="set" data-k="work" data-v="${w}" aria-pressed="${k === w}">${v.tab}</button>`).join('')}</div>
+    <h2 class="hh">${g.h}</h2><p class="lead" style="margin-top:10px">${g.lead}</p>`;
+  if (k === 'hurt'){
+    h += `<h3 class="sub">What to do, in order</h3><ol class="list steps">${g.steps.map(s => `<li><b>${s[0]}</b><br><span class="small">${s[1]}</span></li>`).join('')}</ol>
+    <h3 class="sub">Who to call</h3><div class="res">${g.res.map(r => `<div><div><h3>${r[0]}</h3><p>${r[1]}</p></div><p class="how">${r[2]}</p></div>`).join('')}</div>
+    <h3 class="sub">Good to know</h3><ul class="list">${g.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+    <div class="card box cta2"><div><h2 style="font-size:22px">Not sure how serious it is?</h2><p class="small">Triage points you to a level of care. Then Find care shows options with workers' comp as the payer.</p></div>
+      <div class="frow"><a class="btn" href="#triage">Start triage</a><button class="btn pri" data-act="plan-go" data-k="wc">Find care</button></div></div>`;
+  } else {
+    const oe = openEnrollment(new Date()), picks = workPicks();
+    h += `<div class="card box"><h2 style="font-size:22px">When does your work coverage end?</h2>
+      <p class="small" style="margin-top:6px">Usually the last day of the month you leave. Your employer or HR can tell you.</p>
+      <div class="frow" style="margin-top:12px"><label for="lastday" class="small">Last day of coverage</label><input type="date" id="lastday" data-act="lastday" value="${esc(S.lastday)}"></div>
+      ${workDates()}</div>
+    <p class="small" style="margin-top:14px">${oe.open ? `Open enrollment is on now, until ${fmtDate(oe.end)} on HealthCare.gov, so anyone can sign up for a marketplace plan.` : `Next open enrollment starts ${fmtDate(oe.start)}. Until then you need a reason like losing work coverage.`}</p>
+    <h3 class="sub">Which option to look at first</h3><p class="small" style="margin-top:6px">Tick any that are true. This is a rule of thumb to help you compare, not advice.</p>
+    <div class="card checks" style="margin-top:12px">${WQ.map((q, i) => `<label><input type="checkbox" id="wq-${i}" data-act="wq" data-i="${i}" ${S.wq.includes(i) ? 'checked' : ''}><span>${q[0]}</span></label>`).join('')}</div>
+    <div class="res">${picks.map((p, i) => { const o = WOPT[p.k]; return `<div><div><h3>${o[0]}${i === 0 ? ' <span class="pill ok">Start here</span>' : ''}</h3><p>${o[1]}</p>${p.why.length ? `<ul class="list" style="margin-top:8px">${p.why.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}</div><p class="how">${o[2]}</p></div>`; }).join('')}</div>
+    <h3 class="sub">Good to know</h3><ul class="list">
+      <li>COBRA can wait. You can hold off for up to 60 days and only sign up if you need care, because it covers you back to the day work coverage ended. You then owe every month's premium back to that day.</li>
+      <li>If you choose COBRA and later drop it on purpose, you usually can't switch to a marketplace plan until open enrollment. If COBRA runs out, you can.</li>
+      <li>Losing a job can also mean unemployment pay, which is separate from health coverage. ${ext('https://www.careeronestop.org/LocalHelp/UnemploymentBenefits/find-unemployment-benefits.aspx', 'Find your state\'s unemployment office')}.</li></ul>
+    <div class="card box cta2"><div><h2 style="font-size:22px">Need care before new coverage starts?</h2><p class="small">Shows free clinics and health centers that charge by income.</p></div><button class="btn pri" data-act="lowcost">Show free care</button></div>`;
+  }
+  return h + `<p class="small" style="margin-top:28px">Rules come from dol.gov, osha.gov and healthcare.gov, checked November 2026. Workers' comp deadlines and doctor rules differ by state, so check with your state agency.</p></div>`;
+}
+
+const VIEWS = {home, triage: triageView, 'find-care': findView, help: helpView, work: workView, 'how-it-works': howView};
 function route(){ const r = location.hash.slice(1); return VIEWS[r] ? r : 'home'; }
 function render(top){
   const r = route();
@@ -906,6 +1014,7 @@ document.addEventListener('click', e => {
     lad.querySelectorAll('.rung').forEach((r, i) => r.classList.toggle('on', i === +k));
     document.querySelectorAll('[data-act="demo"]').forEach(b => b.setAttribute('aria-pressed', b === el)); }
   else if (a === 'help-go'){ S.help = k; if (location.hash === '#help') render(true); else location.hash = '#help'; }
+  else if (a === 'work-go'){ S.work = k; if (location.hash === '#work') render(true); else location.hash = '#work'; }
   else if (a === 'lowcost'){ S.mapType = 'low'; location.hash = '#find-care'; }
   else if (a === 'restart'){ clearPhotos(); Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
 });
@@ -921,6 +1030,8 @@ document.addEventListener('change', e => {
   else if (a === 'q') S.qs = tog(S.qs, +el.dataset.i);
   else if (a === 'plan'){ S.plan = el.value; render(); }
   else if (a === 'covered'){ S.covered = el.checked; render(); }
+  else if (a === 'wq'){ S.wq = tog(S.wq, +el.dataset.i); render(); }
+  else if (a === 'lastday'){ S.lastday = el.value; render(); }
   else if (a === 'photo'){
     Array.from(el.files || []).filter(f => f.type.indexOf('image/') === 0).slice(0, MAXPHOTOS - S.photos.length).forEach(f => S.photos.push(URL.createObjectURL(f)));
     render();

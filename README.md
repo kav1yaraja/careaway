@@ -14,6 +14,7 @@ A web app prototype that helps you find the right level of care when you're away
 - **Coverage by plan type.** Pick your plan type, or type your plan's name, to see what it usually covers away from home. No member ID or insurance login.
 - **Find care.** Compare nearby options by fit, estimated cost, typical wait and travel time by car, walking or transit, on a real street map you can drag and zoom. The pins are sample places.
 - **Veterans and housing help.** Crisis lines, VA programs, and how to get care without insurance or a fixed address.
+- **Hurt at work or between jobs.** What to do after an injury on the job and how workers' comp pays, plus COBRA, the marketplace, Medicaid or a parent's plan when work coverage ends, with your deadlines worked out from the date it ends.
 - **Help with cost.** Free clinics, sliding-scale health centers and hospital financial assistance are shown alongside everything else.
 
 ## Cities
