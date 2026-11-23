@@ -869,8 +869,8 @@ function loadGoogle(){
   window.gm_authFailure = () => { gState = 'off'; GM = null; GMcity = null; render(); };   // key refused: back to OpenStreetMap
   window.gReady = async () => {
     try {
-      const [maps, places, marker] = await Promise.all(['maps', 'places', 'marker'].map(l => google.maps.importLibrary(l)));
-      G = {...maps, ...places, ...marker}; gState = 'ready';
+      const [core, maps, places, marker] = await Promise.all(['core', 'maps', 'places', 'marker'].map(l => google.maps.importLibrary(l)));
+      G = {...core, ...maps, ...places, ...marker}; gState = 'ready';
     } catch (err) { gState = 'off'; }
     if (route() === 'find-care') render();
   };
@@ -886,8 +886,8 @@ async function googlePlaces(city){
   if (GPL[city]) return; GPL[city] = [];
   const g = GEO[city], out = [];
   try {
-    const res = await Promise.all(GQ.map(([q]) => G.Place.searchByText({textQuery:q, locationBias:{center:{lat:g[0], lng:g[1]}, radius:9000}, maxResultCount:20,
-      fields:['displayName', 'location', 'formattedAddress', 'nationalPhoneNumber', 'rating', 'userRatingCount', 'googleMapsURI', 'businessStatus']}).catch(() => ({places:[]}))));
+    const res = await Promise.all(GQ.map(([q]) => G.Place.searchByText({textQuery:q, locationBias:{lat:g[0], lng:g[1]}, maxResultCount:20,
+      fields:['displayName', 'location', 'formattedAddress', 'nationalPhoneNumber', 'rating', 'userRatingCount', 'googleMapsURI', 'businessStatus']}).catch(err => { console.warn('CareAway: Google search failed', String(err)); return {places:[]}; })));
     res.forEach((r, i) => (r.places || []).forEach(p => {
       if (!p.location || (p.businessStatus && p.businessStatus !== 'OPERATIONAL')) return;
       const lat = p.location.lat(), lng = p.location.lng();
@@ -896,6 +896,7 @@ async function googlePlaces(city){
         (p.rating ? p.rating.toFixed(1) : '') + '|' + (p.userRatingCount || '') + '|' + (p.googleMapsURI || '')]);
     }));
   } catch (err) {}
+  if (!out.length) console.warn('CareAway: no Google place results. Check that Places API (New) is enabled for this key.');
   // keep Google's places that aren't already on the list from the official or OpenStreetMap data
   GPL[city] = out.filter(o => !REAL[city].some(r => miles(o[1], o[2], r[1], r[2]) < 0.08));
   if (route() === 'find-care' && S.city === city) render();
