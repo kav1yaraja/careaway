@@ -267,6 +267,12 @@ svg text{font-family:var(--body)}
 .gdot.g{box-shadow:0 0 0 2px #1a73e8,0 1px 3px rgba(0,0,0,.4)}
 .gmap .gm-style-iw{font-family:var(--body)}
 
+/* your location */
+.locw{display:grid;gap:8px;width:100%}
+.locrow{display:flex;flex-wrap:wrap;gap:8px} .locrow input{flex:1 1 260px;max-width:520px}
+.locmsg{color:var(--ink)} .locw .muted{font-size:13px}
+.linkbtn{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
 /* extra help */
 .crisis{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;margin-top:24px;padding:16px 20px;border-radius:var(--r-md);background:var(--bad-soft);color:var(--ink)}
 .crisis b{color:var(--bad)} .crisis a{font-weight:600}
@@ -543,8 +549,8 @@ function planPicker(compact){
   </div>`;
 }
 const CITIES = {
-  chi:{name:'Chicago', hood:'the Loop', water:'Lake Michigan', n:['Loop','Lakeshore','South Loop','Riverfront','Near West']},
   sf:{name:'San Francisco Bay Area', hood:'the Mission', water:'San Francisco Bay', n:['Mission','Dolores','Potrero','Bayview','SoMa']},
+  chi:{name:'Chicago', hood:'the Loop', water:'Lake Michigan', n:['Loop','Lakeshore','South Loop','Riverfront','Near West']},
   nyc:{name:'New York City', hood:'Midtown', water:'East River', n:['Midtown','Chelsea','Murray Hill','Eastside','Hudson']},
   la:{name:'Los Angeles', hood:'Koreatown', water:'Pacific Ocean', n:['Koreatown','Silver Lake','Echo Park','Westside','Mid-City']},
   dc:{name:'Washington, DC', hood:'Dupont Circle', water:'Potomac River', n:['Dupont','Foggy Bottom','Capitol Hill','Columbia','Shaw']},
@@ -615,7 +621,7 @@ function rank(level, plan, modes, city){
 }
 
 // ---------- State ----------
-const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'chi', plan:'unsure', planText:'', insurer:null, home:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], realMore:false, rsel:null, help:'vet', result:null};
+const S = {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, city:'sf', plan:'unsure', planText:'', insurer:null, home:'', modes:['car'], covered:false, sel:null, mapType:'all', zoom:1, center:null, photos:[], me:null, addrText:'', locMsg:'', realMore:false, rsel:null, help:'vet', result:null};
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app = document.getElementById('app');
 
@@ -713,7 +719,7 @@ function triageView(){
       <div class="q"><b>How bad does it feel?</b>${optBtns('sev', ['Mild','Moderate','Severe'])}</div>
       <div class="q"><b>Can you do your normal activities?</b>${optBtns('act', ['Doing everything normally','Doing less than usual','Can\'t do my normal activities'])}</div>
       <div class="q"><b>How long has it been going on?</b>${optBtns('dur', ['Started today','1–3 days','4–7 days','More than a week'])}</div>
-      <div class="q" style="padding-top:24px;border-top:1px solid var(--line)"><b>Where are you?</b>${optKeys('city', Object.assign(Object.fromEntries(Object.entries(CITIES).map(([k, c]) => [k, c.name])), {other:'Other city'}))}${S.city === 'other' ? '<p class="hint" style="margin-top:10px">We\'re not in your city yet, but we\'re working on it. You\'ll still get your level of care. We just can\'t list places near you yet.</p>' : ''}</div>
+      <div class="q" style="padding-top:24px;border-top:1px solid var(--line)"><b>Where are you?</b>${locBox()}<p class="small" style="margin:14px 0 8px">Or pick a city:</p>${optKeys('city', Object.assign(Object.fromEntries(Object.entries(CITIES).map(([k, c]) => [k, c.name])), {other:'Other city'}))}${S.city === 'other' ? '<p class="hint" style="margin-top:10px">We\'re not in your city yet, but we\'re working on it. You\'ll still get your level of care. We just can\'t list places near you yet.</p>' : ''}</div>
       <div class="q"><b>How are you covered?</b><p class="hint" style="margin:-6px 0 10px">Type your insurance company and we'll pick it for you. We never ask for a member ID or insurance login.</p>${planPicker(false)}</div>
       ${navrow(true, 'See my level of care')}`;
   }
@@ -794,7 +800,7 @@ const REAL_KIND = {er:['Hospital with an ER', 'er'], hosp:['Hospital', 'er'], uc
 const REAL_FIT = {0:['uc', 'chc', 'clinic'], 1:['uc', 'chc', 'clinic'], 2:['clinic', 'chc', 'uc'], 3:['uc', 'chc', 'clinic', 'er'], 4:['er', 'hosp']};
 function miles(a, b, c, d){ const r = Math.PI / 180, x = (d - b) * r * Math.cos((a + c) / 2 * r), y = (c - a) * r; return Math.sqrt(x * x + y * y) * 3959; }
 function realPlaces(L){
-  const g = GEO[S.city]; if (!g || !REAL[S.city]) return [];
+  const g0 = here(); if (!g0 || !REAL[S.city]) return []; const g = [g0.lat, g0.lng];
   const only = MAPTYPES[S.mapType][1], fit = L == null ? null : REAL_FIT[L];
   const va = planKey() === 'va', low = S.covered;
   return REAL[S.city].concat(GPL[S.city] || []).map((r, i) => { const x = (r[7] || '').split('|'), gg = r[6] === 'g';
@@ -841,7 +847,7 @@ function mountMap(){
       .addTo(LM);
   } else slot.replaceChildren(LMel);
   LMmarks.forEach(m => m.remove()); LMmarks = [];
-  const g = GEO[S.city], only = MAPTYPES[S.mapType][1], pts = [[g[0], g[1]]];
+  const hh = here(), g = [hh.lat, hh.lng], only = MAPTYPES[S.mapType][1], pts = [[g[0], g[1]]];
   LMmarks.push(L.marker([g[0], g[1]], {icon:L.divIcon({className:'', html:'<span class="you">You</span>', iconSize:[0, 0]}), interactive:false, keyboard:false}).addTo(LM));
   lastOpts.forEach((o, i) => { if (!o.mi) return;
     const sel = o.id === S.sel, on = !only || only.includes(o.type);
@@ -855,7 +861,7 @@ function mountMap(){
     const m = L.circleMarker([p.lat, p.lng], {radius:6, color:'#fff', weight:1.5, fillColor:RC[p.kind], fillOpacity:.95, renderer:LMrend}).bindPopup(realPopup(p), {maxWidth:260}).addTo(LM);
     LMmarks.push(m); RMARK[p.id] = m; });
   LM.invalidateSize();
-  if (LMcity !== S.city){ LM.fitBounds(pts, {padding:[28, 28], animate:false}); LMcity = S.city; }
+  if (LMcity !== viewKey()){ if (atMe()) LM.setView(g, 14, {animate:false}); else LM.fitBounds(pts, {padding:[28, 28], animate:false}); LMcity = viewKey(); }
 }
 // ----- Google Maps (used only on the GitHub site, where the key is allowed; everywhere else the OpenStreetMap map stays) -----
 // Browser key, restricted by Google to https://kav1yaraja.github.io/* and to the Maps JavaScript and Places APIs.
@@ -904,7 +910,7 @@ async function googlePlaces(city){
 function gPin(html, cls){ const d = document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; if (cls) el.classList.add(cls); return el; }
 function mountGoogle(){
   const slot = document.getElementById('mapslot'); if (!slot || !useGoogle()) return;
-  const g = GEO[S.city];
+  const hh = here(), g = [hh.lat, hh.lng];
   if (!GM){
     GMel = document.createElement('div'); GMel.className = 'lmap gmap'; slot.replaceChildren(GMel);
     GM = new G.Map(GMel, {center:{lat:g[0], lng:g[1]}, zoom:12, mapId:'DEMO_MAP_ID', disableDefaultUI:true, gestureHandling:'cooperative', clickableIcons:false});
@@ -923,8 +929,49 @@ function mountGoogle(){
     add({lat:o.lat, lng:o.lng}, gPin(`<span class="lpin ${o.fit}${sel ? ' sel' : ''}${on ? '' : ' off'}">${i + 1}</span>`), o.name + ' · ' + money(o.lo, o.hi, o.type === 'er') + ' · ' + o.wait, sel ? 1000 : 500,
       () => { S.sel = S.sel === o.id ? null : o.id; render(); });
     bounds.extend({lat:o.lat, lng:o.lng}); });
-  if (GMcity !== S.city){ GM.fitBounds(bounds, 28); GMcity = S.city; }
+  if (GMcity !== viewKey()){ if (atMe()){ GM.setCenter({lat:g[0], lng:g[1]}); GM.setZoom(14); } else GM.fitBounds(bounds, 28); GMcity = viewKey(); }
   googlePlaces(S.city);
+}
+// ---------- Where the person is: an address they type, or their device's location ----------
+// Nothing here is saved. A typed address is looked up with OpenStreetMap's search (Nominatim); device location never leaves the browser.
+function here(){ const g = GEO[S.city]; return S.me && S.me.city === S.city ? S.me : (g ? {lat:g[0], lng:g[1]} : null); }
+function atMe(){ return !!(S.me && S.me.city === S.city && S.city !== 'other'); }
+function viewKey(){ return S.city + (atMe() ? '@' + S.me.lat + ',' + S.me.lng : ''); }
+function placeMe(lat, lng, label, src){
+  let best = null, d = 1e9;
+  for (const k in GEO){ const x = miles(GEO[k][0], GEO[k][1], lat, lng); if (x < d){ d = x; best = k; } }
+  const city = d <= 30 ? best : 'other';
+  S.me = {lat:+lat.toFixed(5), lng:+lng.toFixed(5), label, src, city};
+  S.city = city; S.sel = null; S.rsel = null;
+  S.locMsg = city === 'other' ? 'That location is outside the cities CareAway covers so far. Telehealth and the search links below still work anywhere.' : '';
+  render();
+}
+async function findAddress(){
+  const q = (S.addrText || '').trim(); if (!q){ S.locMsg = 'Type an address, a cross street or a place name first.'; render(); return; }
+  S.locMsg = 'Looking up that address…'; render();
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&addressdetails=0&q=' + encodeURIComponent(q), {headers:{'Accept-Language':'en'}});
+    const d = r.ok ? await r.json() : [];
+    if (!d.length){ S.locMsg = 'We couldn\'t find that address. Try adding the city and state, or a nearby cross street.'; render(); return; }
+    placeMe(+d[0].lat, +d[0].lon, d[0].display_name.split(', ').slice(0, 3).join(', '), 'addr');
+  } catch (err){ S.locMsg = 'Address search isn\'t available here right now. Try "Use my location", or pick a city.'; render(); }
+}
+function useDevice(){
+  if (!navigator.geolocation){ S.locMsg = 'This browser can\'t share your location. Type an address instead.'; render(); return; }
+  S.locMsg = 'Asking your browser for your location…'; render();
+  navigator.geolocation.getCurrentPosition(p => placeMe(p.coords.latitude, p.coords.longitude, 'your current location', 'gps'),
+    () => { S.locMsg = 'We couldn\'t get your location. Check that location access is allowed, or type an address.'; render(); },
+    {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+}
+function locBox(){
+  return `<div class="locw">
+    <label for="addr" class="small">Your address, or where you are now</label>
+    <div class="locrow"><input type="text" id="addr" maxlength="120" autocomplete="street-address" placeholder="e.g. 233 S Wacker Dr, Chicago" value="${esc(S.addrText || '')}">
+      <button class="btn" data-act="addr-go">Find</button><button class="btn" data-act="gps">Use my location</button></div>
+    ${S.locMsg ? `<p class="small locmsg">${esc(S.locMsg)}</p>` : ''}
+    ${S.me ? `<p class="small">Distances to real places are from <b>${esc(S.me.label)}</b>. <button class="linkbtn" data-act="addr-clear">Clear</button></p>` : ''}
+    <p class="small muted">CareAway doesn't save your location. A typed address is looked up with OpenStreetMap's search; "Use my location" stays in your browser.</p>
+  </div>`;
 }
 function mapCard(opts, c){
   const i = opts.findIndex(o => o.id === S.sel), o = opts[i];
@@ -958,7 +1005,7 @@ function findView(){
   let h = `<div class="in page" style="padding-block:44px 64px"><span class="eyebrow">Find care</span><h1>Options near you</h1>
     <p class="lead">${L == null ? 'Ranked by coverage, cost and travel. <a href="#triage">Start triage</a> to rank by the right level of care too.' : 'Ranked for <b>' + LEVELS[L].toLowerCase() + '</b> first, then coverage, cost and travel. The ER is never hidden.'}</p>
     <div class="card filters">
-      <div class="frow"><span class="eyebrow">City</span>${Object.entries(CITIES).map(([k, v]) => `<button class="chip" data-act="set" data-k="city" data-v="${k}" aria-pressed="${S.city === k}">${v.name}</button>`).join('')}<button class="chip" data-act="set" data-k="city" data-v="other" aria-pressed="${S.city === 'other'}">Other</button></div>
+      ${locBox()}<div class="frow"><span class="eyebrow">City</span>${Object.entries(CITIES).map(([k, v]) => `<button class="chip" data-act="set" data-k="city" data-v="${k}" aria-pressed="${S.city === k}">${v.name}</button>`).join('')}<button class="chip" data-act="set" data-k="city" data-v="other" aria-pressed="${S.city === 'other'}">Other</button></div>
       <div class="frow">
         <span class="small">Getting there</span>${Object.entries(MODE).map(([k, m]) => `<button class="chip" data-act="mode" data-k="${k}" aria-pressed="${S.modes.includes(k)}">${m[0]}</button>`).join('')}</div>
       ${planPicker(true)}<label class="frow" for="covered"><input type="checkbox" id="covered" data-act="covered" ${S.covered ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--accent)"> Only show options that are covered or offer reduced fees</label>
@@ -970,7 +1017,7 @@ function findView(){
   opts.forEach((o, i) => {
     const best = i === 0 && o.fit !== 'low';
     h += `<article class="card place${best ? ' best' : ''}${o.fit === 'low' ? ' dim' : ''}${o.id === S.sel ? ' sel' : ''}"><div class="hd"><div><span class="eyebrow">No. ${i + 1}</span><h3>${o.name}</h3>
-        <p class="small">${o.kind}${o.mi ? ' · ' + o.mi + ' mi from ' + c.hood : ''}</p></div>${best ? '<span class="pill b">Best overall</span>' : ''}</div>
+        <p class="small">${o.kind}${o.mi ? ' · ' + o.mi + ' mi from ' + c.hood + (atMe() ? ' (sample)' : '') : ''}</p></div>${best ? '<span class="pill b">Best overall</span>' : ''}</div>
       <div class="tags">${o.fit === 'na' ? '' : `<span class="pill ${FIT[o.fit][1]}">${FIT[o.fit][0]}</span>`}<span class="pill ${COV[o.cov][1]}">${COV[o.cov][0]}</span></div>
       <dl class="stats"><div><dt>Est. cost</dt><dd>${money(o.lo, o.hi, o.type === 'er')}</dd></div><div><dt>Typical wait</dt><dd>${o.wait}</dd></div><div><dt>Travel</dt><dd>${travelText(o)}</dd></div></dl>
       <div class="act">${o.mi ? dirLink(o, c) + `<button class="btn" data-act="pin" data-k="${o.id}" data-from="card">${o.id === S.sel ? 'Shown on map' : 'Show on map'}</button>` : ''}
@@ -1108,7 +1155,7 @@ document.addEventListener('click', e => {
   if (a === 'next'){ next(); render(true); }
   else if (a === 'back'){ S.step = Math.max(0, S.step - 1); render(true); }
   else if (a === 'topic'){ if (S.topic !== k) S.qs = []; S.topic = k; S.manual = true; render(); }
-  else if (a === 'set'){ S[k] = /^\d+$/.test(v) ? +v : v; if (S.result && route() === 'triage' && S.step === 4) S.result = triage(S); render(); }
+  else if (a === 'set'){ S[k] = /^\d+$/.test(v) ? +v : v; if (k === 'city' && S.me && S.me.city !== v) S.locMsg = ''; if (S.result && route() === 'triage' && S.step === 4) S.result = triage(S); render(); }
   else if (a === 'mode'){ S.modes = S.modes.includes(k) ? S.modes.filter(m => m !== k) : S.modes.concat(k); if (!S.modes.length) S.modes = [k]; render(); }
   else if (a === 'pin'){ S.sel = S.sel === k ? null : k; render();
     if (el.dataset.from === 'card' && S.sel){ const m = document.querySelector('.map'); if (m && m.scrollIntoView) m.scrollIntoView({block:'center', behavior:'smooth'}); }
@@ -1134,9 +1181,13 @@ document.addEventListener('click', e => {
   else if (a === 'rmore'){ S.realMore = !S.realMore; render(); }
   else if (a === 'rshow' && LM && RMARK[k]){ S.rsel = k; const m = RMARK[k]; const mp = document.querySelector('.map'); if (mp && mp.scrollIntoView) mp.scrollIntoView({block:'center', behavior:'smooth'});
     LM.setView(m.getLatLng(), Math.max(LM.getZoom(), 15)); m.openPopup(); document.querySelectorAll('.rrow').forEach(r => r.classList.toggle('sel', !!r.querySelector('[data-k="' + k + '"]'))); }
+  else if (a === 'addr-go'){ findAddress(); }
+  else if (a === 'gps'){ useDevice(); }
+  else if (a === 'addr-clear'){ S.me = null; S.addrText = ''; S.locMsg = ''; render(); }
   else if (a === 'restart'){ clearPhotos(); Object.assign(S, {step:0, red:[], topic:null, manual:false, text:'', qs:[], sev:1, act:0, dur:0, result:null}); render(true); }
 });
 document.addEventListener('keydown', e => {
+  if (e.target.id === 'addr' && e.key === 'Enter'){ e.preventDefault(); S.addrText = e.target.value; findAddress(); return; }
   const el = e.target.closest && e.target.closest('.pin');
   if (el && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); S.sel = S.sel === el.dataset.k ? null : el.dataset.k; render();
     const again = document.querySelector('.pin[data-k="' + el.dataset.k + '"]'); if (again) again.focus(); }
@@ -1154,6 +1205,7 @@ document.addEventListener('change', e => {
   }
 });
 document.addEventListener('input', e => {
+  if (e.target.id === 'addr'){ S.addrText = e.target.value; return; }
   if (e.target.id === 'planSearch'){
     applyTyped(e.target.value);
     if (route() === 'find-care'){
