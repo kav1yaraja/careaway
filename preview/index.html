@@ -866,7 +866,7 @@ const GPL = {};   // Google results per city, same row shape as REAL
 function useGoogle(){ return gState === 'ready' && S.city !== 'other'; }
 function loadGoogle(){
   if (gState !== 'loading') return;
-  window.gm_authFailure = () => { gState = 'off'; GM = null; GMcity = null; render(); };   // key refused: back to OpenStreetMap
+  window.gm_authFailure = () => { gState = 'off'; GMmarks.forEach(m => { try { m.map = null; } catch (err) {} }); GMmarks = []; GMARK = {}; GM = null; GMcity = null; render(); };   // key refused: back to OpenStreetMap
   window.gReady = async () => {
     try {
       const [core, maps, places, marker] = await Promise.all(['core', 'maps', 'places', 'marker'].map(l => google.maps.importLibrary(l)));
